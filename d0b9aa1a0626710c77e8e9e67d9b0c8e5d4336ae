@@ -1,0 +1,24 @@
+README.md
+  09b0d74280706126 3,5,7-16,20,26-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.11",
+  "base_commit_sha": "d0b9aa1a0626710c77e8e9e67d9b0c8e5d4336ae",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 6,
+      "accepted_lines": 29,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/1b586b5af28ebe44872b01c7a22597282579c8ca4c59c3b3c634c1b2637ebe5c"
+    }
+  }
+}
