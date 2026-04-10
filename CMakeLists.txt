@@ -13,6 +13,7 @@ target_sources(viewshell PRIVATE
   src/platform/linux_x11/kernel_resolver.cpp
   src/platform/linux_x11/resource_protocol.cpp
   src/platform/linux_x11/webview_driver.cpp
+  src/platform/linux_x11/bridge_driver.cpp
 )
 target_include_directories(viewshell PUBLIC include)
 

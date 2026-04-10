@@ -39,3 +39,9 @@ target_include_directories(local_app_smoke_test PRIVATE ${CMAKE_SOURCE_DIR}/src 
 target_compile_options(local_app_smoke_test PRIVATE ${GTK3_CFLAGS_OTHER})
 target_link_libraries(local_app_smoke_test PRIVATE viewshell GTest::gtest_main nlohmann_json::nlohmann_json ${GTK3_LIBRARIES} ${X11_LIBRARIES})
 gtest_discover_tests(local_app_smoke_test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(bridge_driver_test unit/bridge_driver_test.cpp unit/bridge_driver_test_hooks.cpp)
+target_include_directories(bridge_driver_test PRIVATE ${CMAKE_SOURCE_DIR}/src ${GTK3_INCLUDE_DIRS})
+target_compile_options(bridge_driver_test PRIVATE ${GTK3_CFLAGS_OTHER})
+target_link_libraries(bridge_driver_test PRIVATE viewshell GTest::gtest_main nlohmann_json::nlohmann_json ${GTK3_LIBRARIES})
+gtest_discover_tests(bridge_driver_test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
