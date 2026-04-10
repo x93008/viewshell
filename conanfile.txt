@@ -1,0 +1,11 @@
+[requires]
+nlohmann_json/3.11.3
+tl-expected/1.1.0
+gtest/1.14.0
+
+[generators]
+CMakeDeps
+CMakeToolchain
+
+[layout]
+cmake_layout

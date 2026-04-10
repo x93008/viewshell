@@ -1,11 +1,12 @@
-find_package(PkgConfig REQUIRED)
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/.conan/build/Debug/generators")
+
+find_package(nlohmann_json REQUIRED)
+find_package(tl-expected REQUIRED)
 find_package(GTest REQUIRED)
 
-list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/.conan")
-find_package(nlohmann_json REQUIRED)
+find_package(PkgConfig REQUIRED)
 
-target_include_directories(viewshell PUBLIC third_party/tl_expected/include)
-target_link_libraries(viewshell PUBLIC nlohmann_json::nlohmann_json)
+target_link_libraries(viewshell PUBLIC nlohmann_json::nlohmann_json tl::expected)
 
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 pkg_check_modules(X11 REQUIRED x11)
