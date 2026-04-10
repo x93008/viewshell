@@ -1,0 +1,34 @@
+src/platform/linux_x11/trust_gate.h
+  09b0d74280706126 1-25
+tests/unit/trust_gate_test.cpp
+  09b0d74280706126 1-44
+tests/CMakeLists.txt
+  09b0d74280706126 48-58
+src/platform/linux_x11/trust_gate.cpp
+  09b0d74280706126 1-56
+CMakeLists.txt
+  09b0d74280706126 17
+tests/integration/remote_untrusted_test.cpp
+  09b0d74280706126 1-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.11",
+  "base_commit_sha": "9a463ae890c2d1097cfb0260cb5765f3ddee560c",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 154,
+      "total_deletions": 1,
+      "accepted_lines": 153,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/7c5d89aea2df89ffb7585106993e762b48fd73f0fbc5fa8e5165a398896f3117"
+    }
+  }
+}
