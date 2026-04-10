@@ -9,6 +9,7 @@ target_sources(viewshell PRIVATE
   src/viewshell/public_types.cpp
   src/viewshell/window_handle.cpp
   src/viewshell/bridge_handle.cpp
+  src/platform/linux_x11/window_driver.cpp
 )
 target_include_directories(viewshell PUBLIC include)
 
