@@ -1,0 +1,38 @@
+src/viewshell/application.cpp
+  09b0d74280706126 8,13,19,36-39,49-58,66-67
+tests/unit/runtime_test_hooks.h
+  09b0d74280706126 1-18
+tests/unit/runtime_test_hooks.cpp
+  09b0d74280706126 1-54
+tests/unit/window_lifecycle_test.cpp
+  09b0d74280706126 1-143
+include/viewshell/application.h
+  09b0d74280706126 4,15-16,35,37-43
+src/viewshell/runtime_state.h
+  09b0d74280706126 5-9,14-24,28
+include/viewshell/window_handle.h
+  09b0d74280706126 48-49
+tests/CMakeLists.txt
+  09b0d74280706126 10-13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.10",
+  "base_commit_sha": "a1c789b198b7bd73c2cc18263840e11051e3b3e3",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 280,
+      "total_deletions": 14,
+      "accepted_lines": 269,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/a140a2fc66ac199f676c1283623a2d91a6c677f3ce1a83b93c78c90407da6b15"
+    }
+  }
+}
