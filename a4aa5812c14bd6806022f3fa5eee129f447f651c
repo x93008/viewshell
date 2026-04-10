@@ -1,0 +1,36 @@
+src/viewshell/application.cpp
+  09b0d74280706126 4,17-18,26,53-54,57-80,84
+src/viewshell/runtime_state.h
+  09b0d74280706126 17,40
+examples/linux_x11_smoke/main.cpp
+  09b0d74280706126 5,7-10,21
+include/viewshell/application.h
+  09b0d74280706126 17,40
+src/platform/linux_x11/webview_driver.cpp
+  09b0d74280706126 2,4-6,10-18,24-50,52-87,89-100,104-114,117-123,127-129,132-136,139-148,152-157,161-164,167-169,172-174
+src/viewshell/window_handle.cpp
+  09b0d74280706126 5,114,120,126,132,138,144,150,156,162,171-172
+src/platform/linux_x11/webview_driver.h
+  09b0d74280706126 9,16-18,23-26,46-47,53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.11",
+  "base_commit_sha": "a4aa5812c14bd6806022f3fa5eee129f447f651c",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 252,
+      "total_deletions": 78,
+      "accepted_lines": 214,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/594028c79071881a76c04761f0e8c5ed5bd1426a6b9777cf2aeea12dededa1c8"
+    }
+  }
+}
