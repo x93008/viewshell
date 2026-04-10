@@ -1,0 +1,36 @@
+src/platform/linux_x11/bridge_driver.h
+  09b0d74280706126 1-39
+tests/unit/bridge_driver_test_hooks.cpp
+  09b0d74280706126 1-27
+tests/unit/bridge_driver_test_hooks.h
+  09b0d74280706126 1-12
+src/platform/linux_x11/bridge_driver.cpp
+  09b0d74280706126 1-19
+tests/unit/bridge_driver_test.cpp
+  09b0d74280706126 1-29
+CMakeLists.txt
+  09b0d74280706126 16
+tests/CMakeLists.txt
+  09b0d74280706126 42-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.11",
+  "base_commit_sha": "f723ebdc45f210c09e069dc66414cae401005105",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 134,
+      "total_deletions": 1,
+      "accepted_lines": 133,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/c5d030bbba714ecd83ad1cc1c57192d00cd255f564d1d9fe0945026929b96c16"
+    }
+  }
+}
