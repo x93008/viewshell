@@ -1,0 +1,24 @@
+CMakeLists.txt
+  09b0d74280706126 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.11",
+  "base_commit_sha": "9c043bfa5105a7d0e942264e78e3511cafa1597a",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 1,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/1b586b5af28ebe44872b01c7a22597282579c8ca4c59c3b3c634c1b2637ebe5c"
+    }
+  }
+}
