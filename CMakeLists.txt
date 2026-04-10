@@ -11,6 +11,7 @@ target_sources(viewshell PRIVATE
   src/viewshell/bridge_handle.cpp
   src/platform/linux_x11/window_driver.cpp
   src/platform/linux_x11/kernel_resolver.cpp
+  src/platform/linux_x11/resource_protocol.cpp
 )
 target_include_directories(viewshell PUBLIC include)
 

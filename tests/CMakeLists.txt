@@ -22,3 +22,8 @@ add_executable(kernel_resolver_test unit/kernel_resolver_test.cpp)
 target_include_directories(kernel_resolver_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(kernel_resolver_test PRIVATE viewshell GTest::gtest_main nlohmann_json::nlohmann_json)
 gtest_discover_tests(kernel_resolver_test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(resource_protocol_test unit/resource_protocol_test.cpp)
+target_include_directories(resource_protocol_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(resource_protocol_test PRIVATE viewshell GTest::gtest_main nlohmann_json::nlohmann_json)
+gtest_discover_tests(resource_protocol_test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
