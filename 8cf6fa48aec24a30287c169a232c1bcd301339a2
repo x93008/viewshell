@@ -1,0 +1,46 @@
+tests/integration/test_app_harness.cpp
+  09b0d74280706126 1-94
+CMakeLists.txt
+  09b0d74280706126 15
+tests/integration/local_app_smoke_test.cpp
+  09b0d74280706126 1-20
+src/viewshell/runtime_state.h
+  09b0d74280706126 10,12,32-35
+src/viewshell/window_handle.cpp
+  09b0d74280706126 140-142
+src/platform/linux_x11/webview_driver.cpp
+  09b0d74280706126 1-57
+tests/CMakeLists.txt
+  09b0d74280706126 30-41
+cmake/ViewshellDeps.cmake
+  09b0d74280706126 15-26
+tests/integration/test_app_harness.h
+  09b0d74280706126 1-44
+src/platform/linux_x11/webview_driver.h
+  09b0d74280706126 1-51
+tests/unit/webview_driver_test.cpp
+  09b0d74280706126 1-9
+tests/fixtures/local_app/subframe.html
+  09b0d74280706126 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.11",
+  "base_commit_sha": "8cf6fa48aec24a30287c169a232c1bcd301339a2",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 314,
+      "total_deletions": 3,
+      "accepted_lines": 311,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/dd2ec5c8bd5a3134473b3db86004fbb52eef7e4b48ac769818eac2c7ce327d8a"
+    }
+  }
+}
