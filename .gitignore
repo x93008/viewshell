@@ -1,3 +1,13 @@
 .worktrees/
 build/
 .conan/
+
+# conan2
+.cache/*
+test_package/build/
+**/test_package/CMakeUserPresets.json
+CMakeUserPresets.json
+compile_commands.json
+conanbuildinfo.txt
+graph_info.json
+conaninfo.txt
