@@ -17,3 +17,8 @@ target_include_directories(window_driver_smoke_test PRIVATE ${CMAKE_SOURCE_DIR}/
 target_compile_options(window_driver_smoke_test PRIVATE ${GTK3_CFLAGS_OTHER})
 target_link_libraries(window_driver_smoke_test PRIVATE viewshell GTest::gtest_main nlohmann_json::nlohmann_json ${GTK3_LIBRARIES} ${X11_LIBRARIES})
 gtest_discover_tests(window_driver_smoke_test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(kernel_resolver_test unit/kernel_resolver_test.cpp)
+target_include_directories(kernel_resolver_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(kernel_resolver_test PRIVATE viewshell GTest::gtest_main nlohmann_json::nlohmann_json)
+gtest_discover_tests(kernel_resolver_test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
