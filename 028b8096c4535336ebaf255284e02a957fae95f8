@@ -1,0 +1,42 @@
+src/platform/linux_x11/resource_protocol.h
+  09b0d74280706126 1-32
+tests/unit/resource_protocol_test.cpp
+  09b0d74280706126 1-77
+tests/fixtures/local_app/index.html
+  09b0d74280706126 1-2
+src/platform/linux_x11/resource_protocol.cpp
+  09b0d74280706126 1-181
+tests/fixtures/local_app/blob.unknownext
+  09b0d74280706126 1
+tests/fixtures/local_app/settings/index.html
+  09b0d74280706126 1-2
+tests/fixtures/local_app/main.js
+  09b0d74280706126 1
+tests/fixtures/alt_app/index.html
+  09b0d74280706126 1-2
+tests/CMakeLists.txt
+  09b0d74280706126 25-29
+CMakeLists.txt
+  09b0d74280706126 14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.10",
+  "base_commit_sha": "028b8096c4535336ebaf255284e02a957fae95f8",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 335,
+      "total_deletions": 31,
+      "accepted_lines": 304,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/32e3b02df5992c698dbb5d244ec4832b5217069865f31e4d2b9421c77b91712b"
+    }
+  }
+}
