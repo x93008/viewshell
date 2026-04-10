@@ -45,3 +45,14 @@ target_include_directories(bridge_driver_test PRIVATE ${CMAKE_SOURCE_DIR}/src ${
 target_compile_options(bridge_driver_test PRIVATE ${GTK3_CFLAGS_OTHER})
 target_link_libraries(bridge_driver_test PRIVATE viewshell GTest::gtest_main nlohmann_json::nlohmann_json ${GTK3_LIBRARIES})
 gtest_discover_tests(bridge_driver_test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(trust_gate_test unit/trust_gate_test.cpp)
+target_include_directories(trust_gate_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(trust_gate_test PRIVATE viewshell GTest::gtest_main nlohmann_json::nlohmann_json)
+gtest_discover_tests(trust_gate_test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(remote_untrusted_test integration/remote_untrusted_test.cpp integration/test_app_harness.cpp)
+target_include_directories(remote_untrusted_test PRIVATE ${CMAKE_SOURCE_DIR}/src ${GTK3_INCLUDE_DIRS} ${X11_INCLUDE_DIRS})
+target_compile_options(remote_untrusted_test PRIVATE ${GTK3_CFLAGS_OTHER})
+target_link_libraries(remote_untrusted_test PRIVATE viewshell GTest::gtest_main nlohmann_json::nlohmann_json ${GTK3_LIBRARIES} ${X11_LIBRARIES})
+gtest_discover_tests(remote_untrusted_test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})

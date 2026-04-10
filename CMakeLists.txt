@@ -14,6 +14,7 @@ target_sources(viewshell PRIVATE
   src/platform/linux_x11/resource_protocol.cpp
   src/platform/linux_x11/webview_driver.cpp
   src/platform/linux_x11/bridge_driver.cpp
+  src/platform/linux_x11/trust_gate.cpp
 )
 target_include_directories(viewshell PUBLIC include)
 
