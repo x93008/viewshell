@@ -20,6 +20,7 @@ target_sources(viewshell PRIVATE
   src/platform/linux_x11/invoke_bus.cpp
 )
 target_include_directories(viewshell PUBLIC include)
+target_include_directories(viewshell PRIVATE src)
 
 enable_testing()
 add_subdirectory(tests)

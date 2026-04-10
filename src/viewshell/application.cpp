@@ -1,5 +1,6 @@
 #include <viewshell/application.h>
 #include "runtime_state.h"
+#include "platform/linux_x11/window_driver.h"
 
 namespace viewshell {
 
@@ -11,13 +12,15 @@ Application::Application(NormalizedAppOptions opts)
 Application::Application(Application&& other) noexcept
     : opts_(std::move(other.opts_)),
       app_state_(std::move(other.app_state_)),
-      window_state_(std::move(other.window_state_)) {}
+      window_state_(std::move(other.window_state_)),
+      window_driver_(std::move(other.window_driver_)) {}
 
 Application& Application::operator=(Application&& other) noexcept {
   if (this != &other) {
     opts_ = std::move(other.opts_);
     app_state_ = std::move(other.app_state_);
     window_state_ = std::move(other.window_state_);
+    window_driver_ = std::move(other.window_driver_);
   }
   return *this;
 }
@@ -32,7 +35,7 @@ Result<Application> Application::create(const AppOptions& options) {
   return Application(std::move(*normalized));
 }
 
-Result<WindowHandle> Application::create_window(const WindowOptions&) {
+Result<WindowHandle> Application::create_window(const WindowOptions& options) {
   if (app_state_->run_started && window_state_->has_window) {
     return tl::unexpected(Error{"multiple_windows_unsupported",
         "only one window is supported in the first release"});
@@ -41,6 +44,23 @@ Result<WindowHandle> Application::create_window(const WindowOptions&) {
     return tl::unexpected(Error{"multiple_windows_unsupported",
         "only one window is supported in the first release"});
   }
+
+  auto driver = std::make_unique<WindowDriver>();
+  auto native = driver->create(options);
+  if (native) {
+    window_state_->window_driver = driver.get();
+    window_driver_ = std::move(driver);
+
+    window_state_->window_driver->on_close = [this]() {
+      app_state_->shutdown_started = true;
+      app_state_->run_exit_code = 0;
+      window_state_->is_closed = true;
+      window_state_->window_driver->quit_main_loop();
+    };
+
+    window_state_->window_driver->show();
+  }
+
   window_state_->has_window = true;
   return WindowHandle(window_state_);
 }
@@ -66,7 +86,13 @@ Result<int> Application::run() {
   if (app_state_->shutdown_started) {
     return app_state_->run_exit_code;
   }
-  return 0;
+  app_state_->run_started = true;
+
+  if (window_state_->window_driver) {
+    window_state_->window_driver->run_main_loop();
+  }
+
+  return app_state_->run_exit_code;
 }
 
 } // namespace viewshell

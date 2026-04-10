@@ -13,6 +13,7 @@ Result<NormalizedAppOptions> normalize_app_options_for_test(const AppOptions& op
 }
 
 struct RuntimeAppState;
+class WindowDriver;
 
 class Application {
 public:
@@ -34,6 +35,7 @@ private:
   NormalizedAppOptions opts_;
   std::shared_ptr<RuntimeAppState> app_state_;
   std::shared_ptr<RuntimeWindowState> window_state_;
+  std::unique_ptr<WindowDriver> window_driver_;
 
   friend void MarkRunStartedForTest(Application&);
   friend void MarkShutdownStartedForTest(Application&);

@@ -12,6 +12,7 @@ namespace viewshell {
 
 class WindowDriver {
 public:
+  ~WindowDriver();
   Result<NativeWindowHandle> create(const WindowOptions& options);
   Result<void> set_title(std::string_view title);
   Result<void> set_size(Size size);
@@ -29,6 +30,9 @@ public:
   Result<void> focus();
   Result<void> begin_drag(DragContext ctx);
   Result<void> close();
+
+  void run_main_loop();
+  void quit_main_loop();
 
   std::function<void()> on_close;
   std::function<void(Size)> on_resize;

@@ -13,6 +13,8 @@
 
 namespace viewshell {
 
+class WindowDriver;
+
 struct RuntimeAppState {
   bool run_started = false;
   bool shutdown_started = false;
@@ -33,6 +35,7 @@ struct RuntimeWindowState {
   NavigationHandler navigation_handler;
   std::vector<std::string> init_scripts;
   std::optional<Capabilities> resolved_capabilities;
+  WindowDriver* window_driver = nullptr;
 };
 
 } // namespace viewshell

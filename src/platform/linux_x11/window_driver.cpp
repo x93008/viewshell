@@ -22,6 +22,15 @@ static gboolean on_gtk_focus(GtkWidget*, GdkEventFocus* event, gpointer user_dat
   return FALSE;
 }
 
+WindowDriver::~WindowDriver() {
+  on_close = nullptr;
+  if (created_ && gtk_window_) {
+    gtk_widget_destroy(gtk_window_);
+    gtk_window_ = nullptr;
+    created_ = false;
+  }
+}
+
 Result<NativeWindowHandle> WindowDriver::create(const WindowOptions& options) {
   if (!gtk_init_check(nullptr, nullptr)) {
     return tl::unexpected(Error{"engine_init_failed", "gtk_init_check failed"});
@@ -170,6 +179,14 @@ Result<void> WindowDriver::close() {
   gtk_window_ = nullptr;
   created_ = false;
   return {};
+}
+
+void WindowDriver::run_main_loop() {
+  if (created_) gtk_main();
+}
+
+void WindowDriver::quit_main_loop() {
+  gtk_main_quit();
 }
 
 }
