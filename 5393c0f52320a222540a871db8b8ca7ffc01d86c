@@ -1,0 +1,40 @@
+tests/CMakeLists.txt
+  09b0d74280706126 14-19
+tests/integration/window_driver_smoke_test.cpp
+  09b0d74280706126 1-53
+cmake/ViewshellDeps.cmake
+  09b0d74280706126 9-14
+src/platform/linux_x11/drag_context.h
+  09b0d74280706126 1-13
+src/platform/linux_x11/window_driver.h
+  09b0d74280706126 1-42
+CMakeLists.txt
+  09b0d74280706126 12
+src/platform/linux_x11/window_driver.cpp
+  09b0d74280706126 1-175
+tests/integration/window_driver_test_hooks.h
+  09b0d74280706126 1-11
+src/platform/linux_x11/native_window_handle.h
+  09b0d74280706126 1-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.10",
+  "base_commit_sha": "5393c0f52320a222540a871db8b8ca7ffc01d86c",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 325,
+      "total_deletions": 4,
+      "accepted_lines": 321,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/63e9c4b0e297217cf6e34e98ad79fbe1533daea3ddbd890b3a86b6401f4cbe33"
+    }
+  }
+}
