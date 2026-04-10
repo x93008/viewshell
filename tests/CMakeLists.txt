@@ -66,3 +66,8 @@ add_executable(builtin_dispatcher_test unit/builtin_dispatcher_test.cpp)
 target_include_directories(builtin_dispatcher_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(builtin_dispatcher_test PRIVATE viewshell GTest::gtest_main nlohmann_json::nlohmann_json)
 gtest_discover_tests(builtin_dispatcher_test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(invoke_bus_test unit/invoke_bus_test.cpp)
+target_include_directories(invoke_bus_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(invoke_bus_test PRIVATE viewshell GTest::gtest_main nlohmann_json::nlohmann_json)
+gtest_discover_tests(invoke_bus_test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})

@@ -17,6 +17,7 @@ target_sources(viewshell PRIVATE
   src/platform/linux_x11/trust_gate.cpp
   src/platform/linux_x11/request_tracker.cpp
   src/platform/linux_x11/builtin_dispatcher.cpp
+  src/platform/linux_x11/invoke_bus.cpp
 )
 target_include_directories(viewshell PUBLIC include)
 
