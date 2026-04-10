@@ -56,3 +56,13 @@ target_include_directories(remote_untrusted_test PRIVATE ${CMAKE_SOURCE_DIR}/src
 target_compile_options(remote_untrusted_test PRIVATE ${GTK3_CFLAGS_OTHER})
 target_link_libraries(remote_untrusted_test PRIVATE viewshell GTest::gtest_main nlohmann_json::nlohmann_json ${GTK3_LIBRARIES} ${X11_LIBRARIES})
 gtest_discover_tests(remote_untrusted_test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(request_tracker_test unit/request_tracker_test.cpp)
+target_include_directories(request_tracker_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(request_tracker_test PRIVATE viewshell GTest::gtest_main nlohmann_json::nlohmann_json)
+gtest_discover_tests(request_tracker_test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(builtin_dispatcher_test unit/builtin_dispatcher_test.cpp)
+target_include_directories(builtin_dispatcher_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(builtin_dispatcher_test PRIVATE viewshell GTest::gtest_main nlohmann_json::nlohmann_json)
+gtest_discover_tests(builtin_dispatcher_test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
