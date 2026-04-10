@@ -1,5 +1,3 @@
-list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/.conan/build/Debug/generators")
-
 find_package(nlohmann_json REQUIRED)
 find_package(tl-expected REQUIRED)
 find_package(GTest REQUIRED)
