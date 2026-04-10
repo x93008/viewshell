@@ -1,0 +1,32 @@
+tests/CMakeLists.txt
+  09b0d74280706126 69-73
+src/platform/linux_x11/invoke_bus.h
+  09b0d74280706126 1-47
+tests/unit/invoke_bus_test.cpp
+  09b0d74280706126 1-44
+src/platform/linux_x11/invoke_bus.cpp
+  09b0d74280706126 1-57
+CMakeLists.txt
+  09b0d74280706126 20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.11",
+  "base_commit_sha": "daf819afc119949635a1da84f9e336e6b1bbdf89",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 174,
+      "total_deletions": 20,
+      "accepted_lines": 154,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/df62bcb215dc020cf708bb7c7acb197f25e327a54f74134a4b436e23bf7e306c"
+    }
+  }
+}
