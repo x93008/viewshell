@@ -1,5 +1,5 @@
 include(GoogleTest)
 
 add_executable(application_create_test unit/application_create_test.cpp)
-target_link_libraries(application_create_test PRIVATE viewshell GTest::gtest_main)
+target_link_libraries(application_create_test PRIVATE viewshell GTest::gtest_main nlohmann_json::nlohmann_json)
 gtest_discover_tests(application_create_test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})

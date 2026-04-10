@@ -1,21 +1,13 @@
 #pragma once
 
-#include <string>
-#include <tl/expected.hpp>
+#include <viewshell/types.h>
+#include <viewshell/options.h>
 
 namespace viewshell {
 
-struct Error {
-  std::string code;
-  std::string message;
-};
-
-template <typename T>
-using Result = tl::expected<T, Error>;
-
-struct AppOptions {
-  int bridge_timeout_ms = 5000;
-};
+namespace detail {
+Result<NormalizedAppOptions> normalize_app_options_for_test(const AppOptions& options);
+}
 
 class Application {
 public:
@@ -28,9 +20,9 @@ public:
   ~Application();
 
 private:
-  explicit Application(int bridge_timeout_ms);
+  explicit Application(NormalizedAppOptions opts);
 
-  int bridge_timeout_ms_;
+  NormalizedAppOptions opts_;
 };
 
 } // namespace viewshell
