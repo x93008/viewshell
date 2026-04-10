@@ -7,7 +7,9 @@
 #include <condition_variable>
 #include <thread>
 #include <vector>
+#include <optional>
 #include <viewshell/types.h>
+#include <viewshell/capabilities.h>
 
 namespace viewshell {
 
@@ -27,6 +29,10 @@ struct RuntimeWindowState {
   bool is_closed = false;
   bool close_acknowledged = false;
   std::unordered_map<std::string, CommandHandler> command_registry;
+  std::vector<PageLoadHandler> page_load_handlers;
+  NavigationHandler navigation_handler;
+  std::vector<std::string> init_scripts;
+  std::optional<Capabilities> resolved_capabilities;
 };
 
 } // namespace viewshell

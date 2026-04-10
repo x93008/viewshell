@@ -137,6 +137,9 @@ Result<void> WindowHandle::set_navigation_handler(NavigationHandler) {
 
 Result<Capabilities> WindowHandle::capabilities() const {
   if (state_->is_closed) return tl::unexpected(Error{"window_closed", ""});
+  if (state_->resolved_capabilities) {
+    return *state_->resolved_capabilities;
+  }
   return tl::unexpected(Error{"unsupported_by_backend", "no backend"});
 }
 
