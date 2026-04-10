@@ -45,6 +45,8 @@ public:
 
 private:
   friend class Application;
+  friend void MarkWindowClosedForTest(WindowHandle&);
+  friend void ArmCloseAcknowledgementForTest(WindowHandle&);
   explicit WindowHandle(std::shared_ptr<struct RuntimeWindowState> state);
   std::shared_ptr<RuntimeWindowState> state_;
 };

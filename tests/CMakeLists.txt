@@ -7,3 +7,7 @@ gtest_discover_tests(application_create_test WORKING_DIRECTORY ${CMAKE_SOURCE_DI
 add_executable(application_lifecycle_test unit/application_lifecycle_test.cpp)
 target_link_libraries(application_lifecycle_test PRIVATE viewshell GTest::gtest_main nlohmann_json::nlohmann_json)
 gtest_discover_tests(application_lifecycle_test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(window_lifecycle_test unit/window_lifecycle_test.cpp unit/runtime_test_hooks.cpp)
+target_link_libraries(window_lifecycle_test PRIVATE viewshell GTest::gtest_main nlohmann_json::nlohmann_json)
+gtest_discover_tests(window_lifecycle_test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
