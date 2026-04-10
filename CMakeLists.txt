@@ -7,6 +7,8 @@ target_compile_features(viewshell PUBLIC cxx_std_20)
 target_sources(viewshell PRIVATE
   src/viewshell/application.cpp
   src/viewshell/public_types.cpp
+  src/viewshell/window_handle.cpp
+  src/viewshell/bridge_handle.cpp
 )
 target_include_directories(viewshell PUBLIC include)
 
