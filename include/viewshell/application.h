@@ -14,6 +14,7 @@ Result<NormalizedAppOptions> normalize_app_options_for_test(const AppOptions& op
 
 struct RuntimeAppState;
 class WindowDriver;
+class WebviewDriver;
 
 class Application {
 public:
@@ -36,6 +37,7 @@ private:
   std::shared_ptr<RuntimeAppState> app_state_;
   std::shared_ptr<RuntimeWindowState> window_state_;
   std::unique_ptr<WindowDriver> window_driver_;
+  std::unique_ptr<WebviewDriver> webview_driver_;
 
   friend void MarkRunStartedForTest(Application&);
   friend void MarkShutdownStartedForTest(Application&);

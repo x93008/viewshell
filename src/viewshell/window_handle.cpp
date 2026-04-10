@@ -2,6 +2,7 @@
 #include <viewshell/bridge_handle.h>
 #include "runtime_state.h"
 #include "platform/linux_x11/window_driver.h"
+#include "platform/linux_x11/webview_driver.h"
 
 namespace viewshell {
 
@@ -110,46 +111,55 @@ Result<void> WindowHandle::close() {
 
 Result<void> WindowHandle::load_url(std::string_view url) {
   if (state_->is_closed) return tl::unexpected(Error{"window_closed", ""});
+  if (state_->webview_driver) return state_->webview_driver->load_url(url);
   return tl::unexpected(Error{"unsupported_by_backend", "no webview backend"});
 }
 
 Result<void> WindowHandle::load_file(std::string_view entry_file) {
   if (state_->is_closed) return tl::unexpected(Error{"window_closed", ""});
+  if (state_->webview_driver) return state_->webview_driver->load_file(entry_file);
   return tl::unexpected(Error{"unsupported_by_backend", "no webview backend"});
 }
 
 Result<void> WindowHandle::reload() {
   if (state_->is_closed) return tl::unexpected(Error{"window_closed", ""});
+  if (state_->webview_driver) return state_->webview_driver->reload();
   return tl::unexpected(Error{"unsupported_by_backend", "no webview backend"});
 }
 
 Result<void> WindowHandle::evaluate_script(std::string_view script) {
   if (state_->is_closed) return tl::unexpected(Error{"window_closed", ""});
+  if (state_->webview_driver) return state_->webview_driver->evaluate_script(script);
   return tl::unexpected(Error{"unsupported_by_backend", "no webview backend"});
 }
 
 Result<void> WindowHandle::add_init_script(std::string_view script) {
   if (state_->is_closed) return tl::unexpected(Error{"window_closed", ""});
+  if (state_->webview_driver) return state_->webview_driver->add_init_script(script);
   return tl::unexpected(Error{"unsupported_by_backend", "no webview backend"});
 }
 
 Result<void> WindowHandle::open_devtools() {
   if (state_->is_closed) return tl::unexpected(Error{"window_closed", ""});
+  if (state_->webview_driver) return state_->webview_driver->open_devtools();
   return tl::unexpected(Error{"unsupported_by_backend", "no webview backend"});
 }
 
 Result<void> WindowHandle::close_devtools() {
   if (state_->is_closed) return tl::unexpected(Error{"window_closed", ""});
+  if (state_->webview_driver) return state_->webview_driver->close_devtools();
   return tl::unexpected(Error{"unsupported_by_backend", "no webview backend"});
 }
 
 Result<void> WindowHandle::on_page_load(PageLoadHandler handler) {
   if (state_->is_closed) return tl::unexpected(Error{"window_closed", ""});
+  if (state_->webview_driver) return state_->webview_driver->on_page_load(std::move(handler));
   return tl::unexpected(Error{"unsupported_by_backend", "no webview backend"});
 }
 
 Result<void> WindowHandle::set_navigation_handler(NavigationHandler handler) {
   if (state_->is_closed) return tl::unexpected(Error{"window_closed", ""});
+  if (state_->webview_driver) return state_->webview_driver->set_navigation_handler(std::move(handler));
   return tl::unexpected(Error{"unsupported_by_backend", "no webview backend"});
 }
 
@@ -157,6 +167,9 @@ Result<Capabilities> WindowHandle::capabilities() const {
   if (state_->is_closed) return tl::unexpected(Error{"window_closed", ""});
   if (state_->resolved_capabilities) {
     return *state_->resolved_capabilities;
+  }
+  if (state_->webview_driver) {
+    return state_->webview_driver->capabilities();
   }
   return tl::unexpected(Error{"unsupported_by_backend", "no backend"});
 }

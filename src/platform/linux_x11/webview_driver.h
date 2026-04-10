@@ -6,19 +6,24 @@
 #include <functional>
 #include <optional>
 #include <filesystem>
+#include <memory>
 #include <viewshell/types.h>
 #include <viewshell/options.h>
 #include <viewshell/capabilities.h>
 #include "native_window_handle.h"
-#include "kernel_resolver.h"
 #include "resource_protocol.h"
+
+typedef struct _WebKitWebView WebKitWebView;
+typedef struct _WebKitUserContentManager WebKitUserContentManager;
 
 namespace viewshell {
 
 class WebviewDriver {
 public:
-  Result<void> attach(NativeWindowHandle native, const WindowOptions& options,
-                      const ResolvedEngine& engine);
+  WebviewDriver();
+  ~WebviewDriver();
+
+  Result<void> attach(NativeWindowHandle native, const WindowOptions& options);
   Result<void> load_file(std::string_view entry_file);
   Result<void> load_url(std::string_view url);
   Result<void> reload();
@@ -38,14 +43,14 @@ public:
 private:
   Result<void> ensure_attached() const;
 
-  void* webview_ = nullptr;
-  void* user_content_manager_ = nullptr;
+  WebKitWebView* webview_ = nullptr;
+  WebKitUserContentManager* user_content_manager_ = nullptr;
   bool attached_ = false;
   Capabilities capabilities_;
   std::vector<PageLoadHandler> page_load_handlers_;
   NavigationHandler navigation_handler_;
   std::vector<std::string> init_scripts_;
-  std::optional<ResourceProtocol> resource_protocol_;
+  std::unique_ptr<ResourceProtocol> resource_protocol_;
 };
 
 } // namespace viewshell

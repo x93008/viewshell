@@ -2,8 +2,13 @@
 #include <viewshell/window_handle.h>
 #include <viewshell/bridge_handle.h>
 #include <cstdio>
+#include <filesystem>
 
-int main() {
+int main(int argc, char* argv[]) {
+  std::string exe_arg(argv[0]);
+  auto exe_dir = std::filesystem::canonical(std::filesystem::path(exe_arg)).parent_path();
+  auto asset_path = exe_dir / "app" / "index.html";
+
   viewshell::AppOptions app_opts;
 
   auto app = viewshell::Application::create(app_opts);
@@ -13,7 +18,7 @@ int main() {
   }
 
   viewshell::WindowOptions win_opts;
-  win_opts.asset_root = "app/index.html";
+  win_opts.asset_root = asset_path.string();
   win_opts.width = 640;
   win_opts.height = 480;
 

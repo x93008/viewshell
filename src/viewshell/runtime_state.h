@@ -14,6 +14,7 @@
 namespace viewshell {
 
 class WindowDriver;
+class WebviewDriver;
 
 struct RuntimeAppState {
   bool run_started = false;
@@ -36,6 +37,7 @@ struct RuntimeWindowState {
   std::vector<std::string> init_scripts;
   std::optional<Capabilities> resolved_capabilities;
   WindowDriver* window_driver = nullptr;
+  WebviewDriver* webview_driver = nullptr;
 };
 
 } // namespace viewshell
