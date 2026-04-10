@@ -1,0 +1,32 @@
+examples/linux_x11_smoke/app/main.js
+  09b0d74280706126 1-3
+tests/integration/size_check_test.sh
+  09b0d74280706126 1-32
+CMakeLists.txt
+  09b0d74280706126 26-28
+examples/linux_x11_smoke/main.cpp
+  09b0d74280706126 1-43
+examples/linux_x11_smoke/app/index.html
+  09b0d74280706126 1-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.11",
+  "base_commit_sha": "dfbcfc5ff4f4e5a80901afefee810157afd281df",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 96,
+      "total_deletions": 0,
+      "accepted_lines": 96,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/2ff4abd7d134265774027a3a136a3128170a2966462fa2cf95e112ec4ca63fcb"
+    }
+  }
+}
