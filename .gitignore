@@ -11,3 +11,18 @@ compile_commands.json
 conanbuildinfo.txt
 graph_info.json
 conaninfo.txt
+
+# cmake
+/spike/
+/out/
+target
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+cmake_test_discovery_*.json
