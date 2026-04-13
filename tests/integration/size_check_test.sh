@@ -3,21 +3,21 @@ set -euo pipefail
 
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 root_dir="$(cd "$script_dir/../.." && pwd)"
-build_dir="$root_dir/build"
+build_dir="$root_dir/build/Debug"
 
-bundle_dir="$build_dir/examples/linux_x11_smoke_bundle"
+bundle_dir="$build_dir/hello_viewshell_bundle"
 mkdir -p "$bundle_dir/app"
 
-if [ ! -f "$build_dir/linux_x11_smoke" ]; then
-  echo "FAIL: linux_x11_smoke binary not found"
+if [ ! -f "$build_dir/hello_viewshell" ]; then
+  echo "FAIL: hello_viewshell binary not found"
   exit 1
 fi
 
-cp "$build_dir/linux_x11_smoke" "$bundle_dir/"
-strip "$bundle_dir/linux_x11_smoke"
+cp "$build_dir/hello_viewshell" "$bundle_dir/"
+strip "$bundle_dir/hello_viewshell"
 
-cp "$root_dir/examples/linux_x11_smoke/app/index.html" "$bundle_dir/app/"
-cp "$root_dir/examples/linux_x11_smoke/app/main.js" "$bundle_dir/app/"
+cp "$root_dir/examples/hello_viewshell/app/index.html" "$bundle_dir/app/"
+cp "$root_dir/examples/hello_viewshell/app/main.js" "$bundle_dir/app/"
 
 actual_size=$(du -sb "$bundle_dir" | cut -f1)
 max_size=10485760

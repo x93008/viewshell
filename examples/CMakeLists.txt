@@ -1,1 +1,1 @@
-add_subdirectory(linux_x11_smoke)
+add_subdirectory(hello_viewshell)

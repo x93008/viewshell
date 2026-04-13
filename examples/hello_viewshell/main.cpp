@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  win->set_title("Viewshell Smoke Test");
+  win->set_title("Hello Viewshell");
 
   auto bridge = win->bridge();
   if (bridge) {
