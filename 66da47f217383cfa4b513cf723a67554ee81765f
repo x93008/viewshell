@@ -1,0 +1,38 @@
+src/runtime/backend_factory.cpp
+  09b0d74280706126 7-11,16-18,20
+docs/superpowers/specs/2026-04-13-windows-backend-skeleton-design.md
+  09b0d74280706126 1-26
+src/CMakeLists.txt
+  09b0d74280706126 14-33
+docs/superpowers/plans/2026-04-13-windows-backend-skeleton.md
+  09b0d74280706126 1-27
+src/platform/windows/windows_backend_runtime.cpp
+  09b0d74280706126 1-59
+src/platform/windows/windows_window_host.h
+  09b0d74280706126 1-75
+src/platform/windows/windows_window_host.cpp
+  09b0d74280706126 1-266
+src/platform/windows/windows_backend_runtime.h
+  09b0d74280706126 1-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.12",
+  "base_commit_sha": "66da47f217383cfa4b513cf723a67554ee81765f",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 515,
+      "total_deletions": 12,
+      "accepted_lines": 515,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/59811dd27283515abef11ae559baf689c00819ce6ebaa1ad5ef2a0f347f9d9d2"
+    }
+  }
+}
