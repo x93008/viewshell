@@ -78,6 +78,29 @@ Result<void> WebviewDriver::attach(NativeWindowHandle native,
   gtk_container_add(GTK_CONTAINER(native.gtk_window), GTK_WIDGET(webview_));
   gtk_widget_show(GTK_WIDGET(webview_));
 
+  if (options.borderless) {
+    GdkRGBA transparent = {0.0, 0.0, 0.0, 0.0};
+    webkit_web_view_set_background_color(webview_, &transparent);
+
+    gtk_widget_add_events(GTK_WIDGET(webview_), GDK_BUTTON_PRESS_MASK);
+    g_signal_connect(GTK_WIDGET(webview_), "button-press-event",
+        G_CALLBACK(+[](GtkWidget* w, GdkEventButton* ev, gpointer) -> gboolean {
+          if (ev->button == 1) {
+            GtkWidget* toplevel = gtk_widget_get_toplevel(w);
+            gtk_window_begin_move_drag(GTK_WINDOW(toplevel),
+                ev->button, (gint)ev->x_root, (gint)ev->y_root, ev->time);
+          }
+          return FALSE;
+        }), nullptr);
+  }
+
+  g_signal_connect(GTK_WIDGET(webview_), "close",
+      G_CALLBACK(+[](WebKitWebView* wv, gpointer) -> gboolean {
+        GtkWidget* toplevel = gtk_widget_get_toplevel(GTK_WIDGET(wv));
+        gtk_widget_destroy(toplevel);
+        return TRUE;
+      }), nullptr);
+
   capabilities_.window.borderless = options.borderless;
   capabilities_.window.always_on_top = options.always_on_top;
   capabilities_.webview.devtools = true;
