@@ -1,0 +1,46 @@
+src/bridge/builtin_dispatcher.cpp
+  09b0d74280706126 1
+docs/superpowers/plans/2026-04-13-source-layout-refactor.md
+  09b0d74280706126 1-37
+src/webview/resource_protocol.cpp
+  09b0d74280706126 1
+src/window/x11_window_driver.h
+  09b0d74280706126 8-9
+src/bridge/x11_bridge_driver.cpp
+  09b0d74280706126 1-2
+src/webview/x11_webview_driver.cpp
+  09b0d74280706126 1-2
+src/window/x11_window_driver.cpp
+  09b0d74280706126 1
+src/bridge/trust_gate.cpp
+  09b0d74280706126 1
+src/bridge/invoke_bus.cpp
+  09b0d74280706126 1
+src/webview/x11_webview_driver.h
+  09b0d74280706126 14-15
+src/bridge/request_tracker.cpp
+  09b0d74280706126 1
+docs/superpowers/specs/2026-04-13-source-layout-refactor-design.md
+  09b0d74280706126 1-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.12",
+  "base_commit_sha": "e43ddefe6e3977547b3b1aaee54d220194cae42c",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 100,
+      "total_deletions": 14,
+      "accepted_lines": 100,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/811a7752c3bfc9d7957e50ca5e636e6cf8cd77f95b450b57c6ea74d824e641be"
+    }
+  }
+}
