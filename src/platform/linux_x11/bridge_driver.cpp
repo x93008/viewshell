@@ -65,17 +65,25 @@ constexpr const char* kBridgeBootstrap = R"JS((function () {
     },
     on: function (name, listener) {
       var listeners = window.__viewshell.__listeners.get(name) || [];
+      var wasEmpty = listeners.length === 0;
       listeners.push(listener);
       window.__viewshell.__listeners.set(name, listeners);
+      if (wasEmpty) {
+        post('subscribe', name, {}, null);
+      }
       return function () {
         window.__viewshell.off(name, listener);
       };
     },
     off: function (name, listener) {
       var listeners = window.__viewshell.__listeners.get(name) || [];
-      window.__viewshell.__listeners.set(name, listeners.filter(function (entry) {
+      var next = listeners.filter(function (entry) {
         return entry !== listener;
-      }));
+      });
+      window.__viewshell.__listeners.set(name, next);
+      if (listeners.length > 0 && next.length === 0) {
+        post('unsubscribe', name, {}, null);
+      }
     }
   };
 })();)JS";

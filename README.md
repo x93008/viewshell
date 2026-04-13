@@ -51,10 +51,11 @@ Current behavior:
 
 - `invoke(...)` resolves or rejects from native `invoke_result` messages
 - `emit(...)` is fire-and-forget
-- `on/off` currently dispatches `native_event` messages inside the page
+- `on/off` now synchronizes subscription state with native and only subscribed events are delivered
 
 Current limitations:
 
 - no JS-side timeout handling for unresolved invokes
-- no typed event subscription protocol between JS and native yet
 - bridge API is currently implemented for Linux X11 WebKitGTK only
+
+See `docs/bridge-api.md` for the current bridge contract and demo notes.

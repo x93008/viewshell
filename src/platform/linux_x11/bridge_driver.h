@@ -19,6 +19,7 @@ class BridgeDriver {
 public:
   Result<void> attach(WebviewDriver& webview);
   Result<void> post_to_page(std::string_view raw_message);
+  bool is_ready() const { return bridge_ready_; }
 
   std::function<void()> on_bridge_ready;
   std::function<void()> on_bridge_reset;

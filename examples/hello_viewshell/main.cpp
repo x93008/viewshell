@@ -36,6 +36,10 @@ int main(int argc, char* argv[]) {
       [](const viewshell::Json& args) -> viewshell::Result<viewshell::Json> {
         return viewshell::Json{{"pong", args.value("value", 0)}};
       });
+    bridge->register_command("app.fail",
+      [](const viewshell::Json&) -> viewshell::Result<viewshell::Json> {
+        return tl::unexpected(viewshell::Error{"demo_failure", "demo reject path"});
+      });
   }
 
   auto run_result = app->run();
