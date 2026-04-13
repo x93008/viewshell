@@ -1,0 +1,1 @@
+add_subdirectory(linux_x11_smoke)
