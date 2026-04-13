@@ -1,0 +1,116 @@
+src/platform/linux_x11/kernel_resolver.cpp
+  d432fc0f00e9bd68 4,14-27,93-103
+src/runtime/backend_factory.h
+  3fa2cacf1faae7b8 1-14
+include/viewshell/application.h
+  09b0d74280706126 43
+  d432fc0f00e9bd68 16,42,50
+  3fa2cacf1faae7b8 17,39,41
+src/CMakeLists.txt
+  d432fc0f00e9bd68 12-13
+  3fa2cacf1faae7b8 7
+src/platform/linux_x11/linux_x11_window_host.h
+  09b0d74280706126 57-58
+  d432fc0f00e9bd68 1-56,59-63
+src/viewshell/runtime_state.h
+  b33522182df0821e 3,17,39
+src/runtime/window_host.h
+  b33522182df0821e 1-41
+src/platform/linux_x11/linux_x11_window_host.cpp
+  d432fc0f00e9bd68 1-23,26-29,32,40-130,134-173,178-182
+  09b0d74280706126 24-25,30-31,33-39,131-133,174-177
+src/platform/linux_x11/linux_x11_backend_runtime.cpp
+  d432fc0f00e9bd68 1-74
+examples/hello_viewshell/CMakeLists.txt
+  09b0d74280706126 4-21
+src/viewshell/window_handle.cpp
+  09b0d74280706126 21,27,33,39,45,51,57,63,69,75,81,87,93,99,108
+  d432fc0f00e9bd68 4,20,26,32,38,44,50,56,62,68,74,80,86,92,98,105-106,113,119,125,131,137,143,149,155,161,170-171
+src/runtime/backend_factory.cpp
+  d432fc0f00e9bd68 5,11
+  3fa2cacf1faae7b8 1-4,6-10,12-14
+tests/unit/window_lifecycle_test.cpp
+  09b0d74280706126 131-141
+  b33522182df0821e 3-5,7-9,94-104,129
+  d432fc0f00e9bd68 10,13-93,105-128
+src/runtime/backend_runtime.h
+  3fa2cacf1faae7b8 1-32
+tests/integration/size_check_test.sh
+  09b0d74280706126 6,19-20
+tests/unit/kernel_resolver_test.cpp
+  d432fc0f00e9bd68 63-69
+examples/circle_window/CMakeLists.txt
+  09b0d74280706126 4-21
+src/platform/linux_x11/linux_x11_backend_runtime.h
+  d432fc0f00e9bd68 1-31
+src/viewshell/application.cpp
+  d432fc0f00e9bd68 18,50-51,53-55,58-60,63,69,73,77,81
+  3fa2cacf1faae7b8 3-4,11-12,25
+tests/unit/application_lifecycle_test.cpp
+  d432fc0f00e9bd68 2,5-7,9,14-20,61-71,96-102
+  3fa2cacf1faae7b8 10-13,29-30,57-60
+  09b0d74280706126 8,21-28,103,105-110
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.12",
+  "base_commit_sha": "eeeb9334e402573412e186a056335734167dc5c0",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 116,
+      "total_deletions": 50,
+      "accepted_lines": 102,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/cff490a4bdc9a56bafb8eaf664a5111afb59330f0b23f70478c276bda935b2fb"
+    },
+    "3fa2cacf1faae7b8": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27b27b50bffe7a7b2K45uApS1e",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 110,
+      "total_deletions": 1,
+      "accepted_lines": 79,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/e2a0010a27974ebacc75bb0510e06335727b62a24a30c7e306ef7df87c237f35"
+    },
+    "b33522182df0821e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27b2d55d9ffe6D9JB6z50LjJoX",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 63,
+      "total_deletions": 0,
+      "accepted_lines": 63,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/44a6b6d1fbfbc54624d79816bc4e27ee24a81740769632d16eede6bea94632e1"
+    },
+    "d432fc0f00e9bd68": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27b1ffaa2ffeoM5UrirO5OpZme",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 628,
+      "total_deletions": 182,
+      "accepted_lines": 549,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/46b13a8be5be72295a78a2af820bb7b7418e1ce11005a93f0127585cfb8f924d"
+    }
+  }
+}
