@@ -2,6 +2,7 @@
   var statusEl = document.getElementById("status");
   var consoleEl = document.getElementById("console");
   var invokePingEl = document.getElementById("invokePing");
+  var invokeMissingEl = document.getElementById("invokeMissing");
   var emitEventEl = document.getElementById("emitEvent");
 
   function writeLine(title, payload) {
@@ -19,6 +20,10 @@
   statusEl.textContent = "Bridge ready";
   writeLine("bridge:ready", { invoke: true, emit: true });
 
+  bridge.on("native-ready", function (payload) {
+    writeLine("native event listener", { name: "native-ready", payload: payload });
+  });
+
   window.addEventListener("viewshell:message", function (event) {
     writeLine("native -> page", event.detail);
   });
@@ -28,6 +33,16 @@
     writeLine("page -> native invoke", { name: "app.ping", payload: payload });
     bridge.invoke("app.ping", payload).then(function (result) {
       writeLine("promise resolved", result);
+    }).catch(function (error) {
+      writeLine("promise rejected", error);
+    });
+  });
+
+  invokeMissingEl.addEventListener("click", function () {
+    var payload = { from: "hello_viewshell" };
+    writeLine("page -> native invoke", { name: "app.missing", payload: payload });
+    bridge.invoke("app.missing", payload).then(function (result) {
+      writeLine("unexpected resolve", result);
     }).catch(function (error) {
       writeLine("promise rejected", error);
     });

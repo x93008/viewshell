@@ -28,6 +28,12 @@ constexpr const char* kBridgeBootstrap = R"JS((function () {
   window.addEventListener('viewshell:message', function (event) {
     var detail = event.detail || {};
     if (detail.kind !== 'invoke_result' || detail.requestId == null) {
+      if (detail.kind === 'native_event' && window.__viewshell && window.__viewshell.__listeners) {
+        var listeners = window.__viewshell.__listeners.get(detail.name) || [];
+        listeners.slice().forEach(function (listener) {
+          listener(detail.payload || {});
+        });
+      }
       return;
     }
 
@@ -46,6 +52,7 @@ constexpr const char* kBridgeBootstrap = R"JS((function () {
   });
 
   window.__viewshell = {
+    __listeners: new Map(),
     invoke: function (name, args) {
       var requestId = nextRequestId++;
       return new Promise(function (resolve, reject) {
@@ -55,6 +62,20 @@ constexpr const char* kBridgeBootstrap = R"JS((function () {
     },
     emit: function (name, payload) {
       post('emit', name, payload || {}, null);
+    },
+    on: function (name, listener) {
+      var listeners = window.__viewshell.__listeners.get(name) || [];
+      listeners.push(listener);
+      window.__viewshell.__listeners.set(name, listeners);
+      return function () {
+        window.__viewshell.off(name, listener);
+      };
+    },
+    off: function (name, listener) {
+      var listeners = window.__viewshell.__listeners.get(name) || [];
+      window.__viewshell.__listeners.set(name, listeners.filter(function (entry) {
+        return entry !== listener;
+      }));
     }
   };
 })();)JS";

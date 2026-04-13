@@ -235,7 +235,7 @@ Result<void> LinuxX11WindowHost::register_command(std::string name, CommandHandl
 }
 
 Result<void> LinuxX11WindowHost::emit(std::string name, const Json& payload) {
-  Json message{{"name", name}, {"payload", payload}};
+  Json message{{"kind", "native_event"}, {"name", name}, {"payload", payload}};
   auto raw = message.dump();
   auto result = bridge_driver_->post_to_page(raw);
   if (!result) {
