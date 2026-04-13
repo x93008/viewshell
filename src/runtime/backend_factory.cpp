@@ -5,9 +5,9 @@
 #include "runtime/backend_runtime.h"
 
 #ifdef _WIN32
-#include "platform/windows/win32_backend_runtime.h"
+#include "runtime/win32_backend_runtime.h"
 #else
-#include "platform/x11/x11_backend_runtime.h"
+#include "runtime/x11_backend_runtime.h"
 #endif
 
 namespace viewshell {
