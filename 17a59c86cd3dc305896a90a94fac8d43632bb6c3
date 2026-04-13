@@ -1,0 +1,40 @@
+src/platform/linux_x11/linux_x11_window_host.h
+  09b0d74280706126 13-14,54-55,63-64
+src/platform/linux_x11/linux_x11_window_host.cpp
+  09b0d74280706126 5-6,31-32,57-61,191-205
+src/platform/linux_x11/invoke_bus.h
+  09b0d74280706126 38
+src/viewshell/bridge_handle.cpp
+  09b0d74280706126 3,14-15,17,20,24-27
+docs/superpowers/specs/2026-04-13-bridge-window-host-refactor-design.md
+  09b0d74280706126 1-122
+tests/unit/window_lifecycle_test.cpp
+  09b0d74280706126 82-98,103-104,109-110,152-175
+docs/superpowers/plans/2026-04-13-bridge-window-host-refactor.md
+  09b0d74280706126 1-81
+src/runtime/window_host.h
+  09b0d74280706126 39-40
+src/platform/linux_x11/invoke_bus.cpp
+  09b0d74280706126 49-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.12",
+  "base_commit_sha": "17a59c86cd3dc305896a90a94fac8d43632bb6c3",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 312,
+      "total_deletions": 22,
+      "accepted_lines": 301,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/4b032d9bf513fa8469a183cf66dbd75b7fac6dd10ac98029dd7c11f33baa2a0b"
+    }
+  }
+}
