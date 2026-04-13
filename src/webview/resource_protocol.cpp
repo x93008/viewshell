@@ -1,4 +1,4 @@
-#include "resource_protocol.h"
+#include "webview/resource_protocol.h"
 
 #include <fstream>
 #include <unordered_map>

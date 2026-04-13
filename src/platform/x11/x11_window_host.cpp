@@ -1,30 +1,30 @@
-#include "linux_x11_window_host.h"
+#include "x11_window_host.h"
 
 #include <memory>
 
-#include "platform/linux_x11/bridge_driver.h"
-#include "platform/linux_x11/invoke_bus.h"
-#include "platform/linux_x11/webview_driver.h"
-#include "platform/linux_x11/window_driver.h"
+#include "bridge/x11_bridge_driver.h"
+#include "bridge/invoke_bus.h"
+#include "webview/x11_webview_driver.h"
+#include "window/x11_window_driver.h"
 #include "viewshell/runtime_state.h"
 
 #include <nlohmann/json.hpp>
 
 namespace viewshell {
 
-LinuxX11WindowHost::LinuxX11WindowHost(std::shared_ptr<RuntimeAppState> app_state,
+X11WindowHost::X11WindowHost(std::shared_ptr<RuntimeAppState> app_state,
     std::shared_ptr<RuntimeWindowState> window_state)
     : app_state_(std::move(app_state)),
       window_state_(std::move(window_state)) {}
 
-LinuxX11WindowHost::~LinuxX11WindowHost() = default;
+X11WindowHost::~X11WindowHost() = default;
 
-Result<std::shared_ptr<LinuxX11WindowHost>> LinuxX11WindowHost::create(
+Result<std::shared_ptr<X11WindowHost>> X11WindowHost::create(
     std::shared_ptr<RuntimeAppState> app_state,
     std::shared_ptr<RuntimeWindowState> window_state,
     const WindowOptions& options) {
-  auto host = std::shared_ptr<LinuxX11WindowHost>(
-      new LinuxX11WindowHost(std::move(app_state), std::move(window_state)));
+  auto host = std::shared_ptr<X11WindowHost>(
+      new X11WindowHost(std::move(app_state), std::move(window_state)));
   auto weak_app_state = host->app_state_;
   auto weak_window_state = host->window_state_;
 
@@ -129,112 +129,112 @@ Result<std::shared_ptr<LinuxX11WindowHost>> LinuxX11WindowHost::create(
   return host;
 }
 
-void LinuxX11WindowHost::run_main_loop() {
+void X11WindowHost::run_main_loop() {
   if (window_driver_) {
     window_driver_->run_main_loop();
   }
 }
 
-Result<void> LinuxX11WindowHost::set_title(std::string_view title) {
+Result<void> X11WindowHost::set_title(std::string_view title) {
   return window_driver_->set_title(title);
 }
 
-Result<void> LinuxX11WindowHost::maximize() {
+Result<void> X11WindowHost::maximize() {
   return window_driver_->maximize();
 }
 
-Result<void> LinuxX11WindowHost::unmaximize() {
+Result<void> X11WindowHost::unmaximize() {
   return window_driver_->unmaximize();
 }
 
-Result<void> LinuxX11WindowHost::minimize() {
+Result<void> X11WindowHost::minimize() {
   return window_driver_->minimize();
 }
 
-Result<void> LinuxX11WindowHost::unminimize() {
+Result<void> X11WindowHost::unminimize() {
   return window_driver_->unminimize();
 }
 
-Result<void> LinuxX11WindowHost::show() {
+Result<void> X11WindowHost::show() {
   return window_driver_->show();
 }
 
-Result<void> LinuxX11WindowHost::hide() {
+Result<void> X11WindowHost::hide() {
   return window_driver_->hide();
 }
 
-Result<void> LinuxX11WindowHost::focus() {
+Result<void> X11WindowHost::focus() {
   return window_driver_->focus();
 }
 
-Result<void> LinuxX11WindowHost::set_size(Size size) {
+Result<void> X11WindowHost::set_size(Size size) {
   return window_driver_->set_size(size);
 }
 
-Result<Size> LinuxX11WindowHost::get_size() const {
+Result<Size> X11WindowHost::get_size() const {
   return window_driver_->get_size();
 }
 
-Result<void> LinuxX11WindowHost::set_position(Position pos) {
+Result<void> X11WindowHost::set_position(Position pos) {
   return window_driver_->set_position(pos);
 }
 
-Result<Position> LinuxX11WindowHost::get_position() const {
+Result<Position> X11WindowHost::get_position() const {
   return window_driver_->get_position();
 }
 
-Result<void> LinuxX11WindowHost::set_borderless(bool enabled) {
+Result<void> X11WindowHost::set_borderless(bool enabled) {
   return window_driver_->set_borderless(enabled);
 }
 
-Result<void> LinuxX11WindowHost::set_always_on_top(bool enabled) {
+Result<void> X11WindowHost::set_always_on_top(bool enabled) {
   return window_driver_->set_always_on_top(enabled);
 }
 
-Result<void> LinuxX11WindowHost::close() {
+Result<void> X11WindowHost::close() {
   if (auto window_state = window_state_.lock()) {
     window_state->is_closed = true;
   }
   return window_driver_->close();
 }
 
-Result<void> LinuxX11WindowHost::load_url(std::string_view url) {
+Result<void> X11WindowHost::load_url(std::string_view url) {
   return webview_driver_->load_url(url);
 }
 
-Result<void> LinuxX11WindowHost::load_file(std::string_view entry_file) {
+Result<void> X11WindowHost::load_file(std::string_view entry_file) {
   return webview_driver_->load_file(entry_file);
 }
 
-Result<void> LinuxX11WindowHost::reload() {
+Result<void> X11WindowHost::reload() {
   return webview_driver_->reload();
 }
 
-Result<void> LinuxX11WindowHost::evaluate_script(std::string_view script) {
+Result<void> X11WindowHost::evaluate_script(std::string_view script) {
   return webview_driver_->evaluate_script(script);
 }
 
-Result<void> LinuxX11WindowHost::add_init_script(std::string_view script) {
+Result<void> X11WindowHost::add_init_script(std::string_view script) {
   return webview_driver_->add_init_script(script);
 }
 
-Result<void> LinuxX11WindowHost::open_devtools() {
+Result<void> X11WindowHost::open_devtools() {
   return webview_driver_->open_devtools();
 }
 
-Result<void> LinuxX11WindowHost::close_devtools() {
+Result<void> X11WindowHost::close_devtools() {
   return webview_driver_->close_devtools();
 }
 
-Result<void> LinuxX11WindowHost::on_page_load(PageLoadHandler handler) {
+Result<void> X11WindowHost::on_page_load(PageLoadHandler handler) {
   return webview_driver_->on_page_load(std::move(handler));
 }
 
-Result<void> LinuxX11WindowHost::set_navigation_handler(NavigationHandler handler) {
+Result<void> X11WindowHost::set_navigation_handler(NavigationHandler handler) {
   return webview_driver_->set_navigation_handler(std::move(handler));
 }
 
-Result<Capabilities> LinuxX11WindowHost::capabilities() const {
+Result<Capabilities> X11WindowHost::capabilities() const {
   if (auto window_state = window_state_.lock()) {
     if (window_state->resolved_capabilities) {
       return *window_state->resolved_capabilities;
@@ -243,11 +243,11 @@ Result<Capabilities> LinuxX11WindowHost::capabilities() const {
   return webview_driver_->capabilities();
 }
 
-Result<void> LinuxX11WindowHost::register_command(std::string name, CommandHandler handler) {
+Result<void> X11WindowHost::register_command(std::string name, CommandHandler handler) {
   return invoke_bus_->register_command(std::move(name), std::move(handler));
 }
 
-Result<void> LinuxX11WindowHost::emit(std::string name, const Json& payload) {
+Result<void> X11WindowHost::emit(std::string name, const Json& payload) {
   if (!bridge_driver_->is_ready()) {
     return tl::unexpected(Error{"bridge_unavailable", "bridge is not active"});
   }

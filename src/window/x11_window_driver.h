@@ -5,8 +5,8 @@
 #include <functional>
 #include <viewshell/types.h>
 #include <viewshell/options.h>
-#include "native_window_handle.h"
-#include "drag_context.h"
+#include "window/x11_native_window_handle.h"
+#include "window/x11_drag_context.h"
 
 namespace viewshell {
 

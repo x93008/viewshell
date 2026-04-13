@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <viewshell/options.h>
 #include <viewshell/capabilities.h>
-#include "platform/linux_x11/kernel_resolver.h"
+#include "platform/x11/kernel_resolver.h"
 #include "kernel_resolver_test_support.h"
 
 namespace {

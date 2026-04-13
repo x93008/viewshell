@@ -1,6 +1,6 @@
 #pragma once
 
-#include <platform/linux_x11/window_driver.h>
+#include <window/x11_window_driver.h>
 #include <viewshell/window_handle.h>
 
 namespace viewshell {

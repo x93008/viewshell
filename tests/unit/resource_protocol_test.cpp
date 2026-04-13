@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "platform/linux_x11/resource_protocol.h"
+#include "webview/resource_protocol.h"
 
 TEST(ResourceProtocol, rejects_paths_outside_asset_root) {
   viewshell::ResourceProtocol protocol("/tmp/app");

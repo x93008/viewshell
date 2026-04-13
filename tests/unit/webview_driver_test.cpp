@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "platform/linux_x11/webview_driver.h"
+#include "webview/x11_webview_driver.h"
 
 TEST(WebviewDriver, rejects_unsupported_url_schemes) {
   EXPECT_FALSE(viewshell::WebviewDriver::is_allowed_url_scheme("file:///tmp/index.html"));

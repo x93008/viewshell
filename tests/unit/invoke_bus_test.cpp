@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "platform/linux_x11/invoke_bus.h"
+#include "bridge/invoke_bus.h"
 
 using viewshell::Json;
 using viewshell::InvokeBus;

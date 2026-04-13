@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "platform/linux_x11/bridge_driver.h"
+#include "bridge/x11_bridge_driver.h"
 #include "bridge_driver_test_hooks.h"
 
 TEST(BridgeDriver, signals_ready_reset_and_raw_message) {

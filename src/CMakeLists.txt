@@ -13,22 +13,22 @@ target_sources(viewshell PRIVATE
 
 if(WIN32)
   target_sources(viewshell PRIVATE
-    platform/windows/windows_backend_runtime.cpp
-    platform/windows/windows_window_host.cpp
+    platform/windows/win32_backend_runtime.cpp
+    platform/windows/win32_window_host.cpp
   )
 else()
   target_sources(viewshell PRIVATE
-    platform/linux_x11/linux_x11_backend_runtime.cpp
-    platform/linux_x11/linux_x11_window_host.cpp
-    platform/linux_x11/window_driver.cpp
-    platform/linux_x11/kernel_resolver.cpp
-    platform/linux_x11/resource_protocol.cpp
-    platform/linux_x11/webview_driver.cpp
-    platform/linux_x11/bridge_driver.cpp
-    platform/linux_x11/trust_gate.cpp
-    platform/linux_x11/request_tracker.cpp
-    platform/linux_x11/builtin_dispatcher.cpp
-    platform/linux_x11/invoke_bus.cpp
+    platform/x11/x11_backend_runtime.cpp
+    platform/x11/x11_window_host.cpp
+    window/x11_window_driver.cpp
+    platform/x11/kernel_resolver.cpp
+    webview/resource_protocol.cpp
+    webview/x11_webview_driver.cpp
+    bridge/x11_bridge_driver.cpp
+    bridge/trust_gate.cpp
+    bridge/request_tracker.cpp
+    bridge/builtin_dispatcher.cpp
+    bridge/invoke_bus.cpp
   )
 endif()
 

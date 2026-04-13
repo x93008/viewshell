@@ -1,4 +1,4 @@
-#include "trust_gate.h"
+#include "bridge/trust_gate.h"
 #include <algorithm>
 
 namespace viewshell {

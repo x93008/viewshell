@@ -1,6 +1,6 @@
 #pragma once
 
-#include "platform/linux_x11/kernel_resolver.h"
+#include "platform/x11/kernel_resolver.h"
 
 namespace viewshell {
 

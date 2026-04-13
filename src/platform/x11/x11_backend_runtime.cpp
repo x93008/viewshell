@@ -1,21 +1,38 @@
-#ifdef _WIN32
-
-#include "windows_backend_runtime.h"
+#include "x11_backend_runtime.h"
 
 #include <mutex>
 
-#include "platform/windows/windows_window_host.h"
+#include "platform/x11/kernel_resolver.h"
+#include "platform/x11/x11_window_host.h"
 #include "viewshell/runtime_state.h"
 
 namespace viewshell {
+namespace {
 
-WindowsBackendRuntime::~WindowsBackendRuntime() = default;
+AppOptions to_app_options(const NormalizedAppOptions& options) {
+  AppOptions app_options;
+  app_options.bridge_timeout_ms = options.bridge_timeout_ms;
+  app_options.trusted_origins = options.trusted_origins;
+  app_options.require_engine = options.require_engine;
+  app_options.engine_path = options.engine_path;
+  return app_options;
+}
 
-Result<std::shared_ptr<WindowHost>> WindowsBackendRuntime::create_window(
+} // namespace
+
+X11BackendRuntime::~X11BackendRuntime() = default;
+
+Result<std::shared_ptr<WindowHost>> X11BackendRuntime::create_window(
     std::shared_ptr<RuntimeAppState> app_state,
     std::shared_ptr<RuntimeWindowState> window_state,
-    const NormalizedAppOptions&, const WindowOptions& window_options) {
-  auto host = WindowsWindowHost::create(app_state, window_state, window_options);
+    const NormalizedAppOptions& app_options,
+    const WindowOptions& window_options) {
+  auto resolved = KernelResolver::resolve(to_app_options(app_options));
+  if (!resolved) {
+    return tl::unexpected(resolved.error());
+  }
+
+  auto host = X11WindowHost::create(app_state, window_state, window_options);
   if (!host) {
     return tl::unexpected(host.error());
   }
@@ -24,7 +41,7 @@ Result<std::shared_ptr<WindowHost>> WindowsBackendRuntime::create_window(
   return std::static_pointer_cast<WindowHost>(active_host_);
 }
 
-Result<void> WindowsBackendRuntime::post(std::shared_ptr<RuntimeAppState> app_state,
+Result<void> X11BackendRuntime::post(std::shared_ptr<RuntimeAppState> app_state,
     std::function<void()> task) {
   if (!app_state->run_started || app_state->shutdown_started) {
     return tl::unexpected(Error{"invalid_state",
@@ -39,7 +56,7 @@ Result<void> WindowsBackendRuntime::post(std::shared_ptr<RuntimeAppState> app_st
   return {};
 }
 
-Result<int> WindowsBackendRuntime::run(std::shared_ptr<RuntimeAppState> app_state,
+Result<int> X11BackendRuntime::run(std::shared_ptr<RuntimeAppState> app_state,
     std::shared_ptr<RuntimeWindowState> window_state) {
   if (!window_state->has_window || !active_host_) {
     return tl::unexpected(Error{"invalid_state",
@@ -50,10 +67,8 @@ Result<int> WindowsBackendRuntime::run(std::shared_ptr<RuntimeAppState> app_stat
   }
 
   app_state->run_started = true;
-  active_host_->run_message_loop();
+  active_host_->run_main_loop();
   return app_state->run_exit_code;
 }
 
 } // namespace viewshell
-
-#endif

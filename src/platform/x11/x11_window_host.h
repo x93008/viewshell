@@ -16,14 +16,14 @@ class InvokeBus;
 class WindowDriver;
 class WebviewDriver;
 
-class LinuxX11WindowHost final : public WindowHost {
+class X11WindowHost final : public WindowHost {
 public:
-  static Result<std::shared_ptr<LinuxX11WindowHost>> create(
+  static Result<std::shared_ptr<X11WindowHost>> create(
       std::shared_ptr<RuntimeAppState> app_state,
       std::shared_ptr<RuntimeWindowState> window_state,
       const WindowOptions& options);
 
-  ~LinuxX11WindowHost() override;
+  ~X11WindowHost() override;
 
   void run_main_loop();
 
@@ -56,7 +56,7 @@ public:
   Result<void> emit(std::string name, const Json& payload) override;
 
 private:
-  LinuxX11WindowHost(std::shared_ptr<RuntimeAppState> app_state,
+  X11WindowHost(std::shared_ptr<RuntimeAppState> app_state,
       std::shared_ptr<RuntimeWindowState> window_state);
 
   std::weak_ptr<RuntimeAppState> app_state_;

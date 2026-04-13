@@ -1,6 +1,6 @@
 #ifdef _WIN32
 
-#include "windows_window_host.h"
+#include "win32_window_host.h"
 
 #include <string>
 
@@ -26,27 +26,27 @@ Error unsupported_webview_error() {
 
 } // namespace
 
-WindowsWindowHost::WindowsWindowHost(std::shared_ptr<RuntimeAppState> app_state,
+Win32WindowHost::Win32WindowHost(std::shared_ptr<RuntimeAppState> app_state,
     std::shared_ptr<RuntimeWindowState> window_state)
     : app_state_(std::move(app_state)),
       window_state_(std::move(window_state)) {}
 
-WindowsWindowHost::~WindowsWindowHost() {
+Win32WindowHost::~Win32WindowHost() {
   if (hwnd_) {
     DestroyWindow(hwnd_);
     hwnd_ = nullptr;
   }
 }
 
-LRESULT CALLBACK WindowsWindowHost::WindowProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
+LRESULT CALLBACK Win32WindowHost::WindowProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
   if (message == WM_NCCREATE) {
     auto* create = reinterpret_cast<CREATESTRUCTW*>(lparam);
-    auto* self = static_cast<WindowsWindowHost*>(create->lpCreateParams);
+    auto* self = static_cast<Win32WindowHost*>(create->lpCreateParams);
     SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self));
     return DefWindowProcW(hwnd, message, wparam, lparam);
   }
 
-  auto* self = reinterpret_cast<WindowsWindowHost*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+  auto* self = reinterpret_cast<Win32WindowHost*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
   if (!self) {
     return DefWindowProcW(hwnd, message, wparam, lparam);
   }
@@ -71,12 +71,12 @@ LRESULT CALLBACK WindowsWindowHost::WindowProc(HWND hwnd, UINT message, WPARAM w
   return DefWindowProcW(hwnd, message, wparam, lparam);
 }
 
-Result<std::shared_ptr<WindowsWindowHost>> WindowsWindowHost::create(
+Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
     std::shared_ptr<RuntimeAppState> app_state,
     std::shared_ptr<RuntimeWindowState> window_state,
     const WindowOptions& options) {
-  auto host = std::shared_ptr<WindowsWindowHost>(
-      new WindowsWindowHost(std::move(app_state), std::move(window_state)));
+  auto host = std::shared_ptr<Win32WindowHost>(
+      new Win32WindowHost(std::move(app_state), std::move(window_state)));
 
   host->size_ = {options.width, options.height};
   host->position_ = {options.x.value_or(CW_USEDEFAULT), options.y.value_or(CW_USEDEFAULT)};
@@ -85,7 +85,7 @@ Result<std::shared_ptr<WindowsWindowHost>> WindowsWindowHost::create(
 
   const wchar_t* class_name = L"ViewshellWindow";
   WNDCLASSW wc{};
-  wc.lpfnWndProc = WindowsWindowHost::WindowProc;
+  wc.lpfnWndProc = Win32WindowHost::WindowProc;
   wc.hInstance = GetModuleHandleW(nullptr);
   wc.lpszClassName = class_name;
   wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
@@ -119,7 +119,7 @@ Result<std::shared_ptr<WindowsWindowHost>> WindowsWindowHost::create(
   return host;
 }
 
-void WindowsWindowHost::run_message_loop() {
+void Win32WindowHost::run_message_loop() {
   MSG msg;
   while (GetMessageW(&msg, nullptr, 0, 0) > 0) {
     TranslateMessage(&msg);
@@ -127,14 +127,14 @@ void WindowsWindowHost::run_message_loop() {
   }
 }
 
-Result<void> WindowsWindowHost::ensure_window() const {
+Result<void> Win32WindowHost::ensure_window() const {
   if (!hwnd_) {
     return tl::unexpected(Error{"invalid_state", "window is not available"});
   }
   return {};
 }
 
-void WindowsWindowHost::update_style() {
+void Win32WindowHost::update_style() {
   if (!hwnd_) {
     return;
   }
@@ -146,115 +146,115 @@ void WindowsWindowHost::update_style() {
       SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
 }
 
-Result<void> WindowsWindowHost::set_title(std::string_view title) {
+Result<void> Win32WindowHost::set_title(std::string_view title) {
   if (auto result = ensure_window(); !result) return result;
   auto wide = to_wstring(title);
   SetWindowTextW(hwnd_, wide.c_str());
   return {};
 }
 
-Result<void> WindowsWindowHost::maximize() {
+Result<void> Win32WindowHost::maximize() {
   if (auto result = ensure_window(); !result) return result;
   ShowWindow(hwnd_, SW_MAXIMIZE);
   return {};
 }
 
-Result<void> WindowsWindowHost::unmaximize() {
+Result<void> Win32WindowHost::unmaximize() {
   if (auto result = ensure_window(); !result) return result;
   ShowWindow(hwnd_, SW_RESTORE);
   return {};
 }
 
-Result<void> WindowsWindowHost::minimize() {
+Result<void> Win32WindowHost::minimize() {
   if (auto result = ensure_window(); !result) return result;
   ShowWindow(hwnd_, SW_MINIMIZE);
   return {};
 }
 
-Result<void> WindowsWindowHost::unminimize() {
+Result<void> Win32WindowHost::unminimize() {
   if (auto result = ensure_window(); !result) return result;
   ShowWindow(hwnd_, SW_RESTORE);
   return {};
 }
 
-Result<void> WindowsWindowHost::show() {
+Result<void> Win32WindowHost::show() {
   if (auto result = ensure_window(); !result) return result;
   ShowWindow(hwnd_, SW_SHOW);
   return {};
 }
 
-Result<void> WindowsWindowHost::hide() {
+Result<void> Win32WindowHost::hide() {
   if (auto result = ensure_window(); !result) return result;
   ShowWindow(hwnd_, SW_HIDE);
   return {};
 }
 
-Result<void> WindowsWindowHost::focus() {
+Result<void> Win32WindowHost::focus() {
   if (auto result = ensure_window(); !result) return result;
   SetForegroundWindow(hwnd_);
   SetFocus(hwnd_);
   return {};
 }
 
-Result<void> WindowsWindowHost::set_size(Size size) {
+Result<void> Win32WindowHost::set_size(Size size) {
   if (auto result = ensure_window(); !result) return result;
   size_ = size;
   SetWindowPos(hwnd_, nullptr, 0, 0, size.width, size.height, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
   return {};
 }
 
-Result<Size> WindowsWindowHost::get_size() const {
+Result<Size> Win32WindowHost::get_size() const {
   if (auto result = ensure_window(); !result) return tl::unexpected(result.error());
   RECT rect{};
   GetWindowRect(hwnd_, &rect);
   return Size{rect.right - rect.left, rect.bottom - rect.top};
 }
 
-Result<void> WindowsWindowHost::set_position(Position pos) {
+Result<void> Win32WindowHost::set_position(Position pos) {
   if (auto result = ensure_window(); !result) return result;
   position_ = pos;
   SetWindowPos(hwnd_, nullptr, pos.x, pos.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
   return {};
 }
 
-Result<Position> WindowsWindowHost::get_position() const {
+Result<Position> Win32WindowHost::get_position() const {
   if (auto result = ensure_window(); !result) return tl::unexpected(result.error());
   RECT rect{};
   GetWindowRect(hwnd_, &rect);
   return Position{rect.left, rect.top};
 }
 
-Result<void> WindowsWindowHost::set_borderless(bool enabled) {
+Result<void> Win32WindowHost::set_borderless(bool enabled) {
   borderless_ = enabled;
   update_style();
   return {};
 }
 
-Result<void> WindowsWindowHost::set_always_on_top(bool enabled) {
+Result<void> Win32WindowHost::set_always_on_top(bool enabled) {
   always_on_top_ = enabled;
   update_style();
   return {};
 }
 
-Result<void> WindowsWindowHost::close() {
+Result<void> Win32WindowHost::close() {
   if (auto result = ensure_window(); !result) return result;
   SendMessageW(hwnd_, WM_CLOSE, 0, 0);
   return {};
 }
 
-Result<void> WindowsWindowHost::load_url(std::string_view) { return tl::unexpected(unsupported_webview_error()); }
-Result<void> WindowsWindowHost::load_file(std::string_view) { return tl::unexpected(unsupported_webview_error()); }
-Result<void> WindowsWindowHost::reload() { return tl::unexpected(unsupported_webview_error()); }
-Result<void> WindowsWindowHost::evaluate_script(std::string_view) { return tl::unexpected(unsupported_webview_error()); }
-Result<void> WindowsWindowHost::add_init_script(std::string_view) { return tl::unexpected(unsupported_webview_error()); }
-Result<void> WindowsWindowHost::open_devtools() { return tl::unexpected(unsupported_webview_error()); }
-Result<void> WindowsWindowHost::close_devtools() { return tl::unexpected(unsupported_webview_error()); }
-Result<void> WindowsWindowHost::on_page_load(PageLoadHandler) { return tl::unexpected(unsupported_webview_error()); }
-Result<void> WindowsWindowHost::set_navigation_handler(NavigationHandler) { return tl::unexpected(unsupported_webview_error()); }
-Result<void> WindowsWindowHost::register_command(std::string, CommandHandler) { return tl::unexpected(Error{"unsupported_by_backend", "windows bridge backend not implemented yet"}); }
-Result<void> WindowsWindowHost::emit(std::string, const Json&) { return tl::unexpected(Error{"bridge_unavailable", "windows bridge backend not implemented yet"}); }
+Result<void> Win32WindowHost::load_url(std::string_view) { return tl::unexpected(unsupported_webview_error()); }
+Result<void> Win32WindowHost::load_file(std::string_view) { return tl::unexpected(unsupported_webview_error()); }
+Result<void> Win32WindowHost::reload() { return tl::unexpected(unsupported_webview_error()); }
+Result<void> Win32WindowHost::evaluate_script(std::string_view) { return tl::unexpected(unsupported_webview_error()); }
+Result<void> Win32WindowHost::add_init_script(std::string_view) { return tl::unexpected(unsupported_webview_error()); }
+Result<void> Win32WindowHost::open_devtools() { return tl::unexpected(unsupported_webview_error()); }
+Result<void> Win32WindowHost::close_devtools() { return tl::unexpected(unsupported_webview_error()); }
+Result<void> Win32WindowHost::on_page_load(PageLoadHandler) { return tl::unexpected(unsupported_webview_error()); }
+Result<void> Win32WindowHost::set_navigation_handler(NavigationHandler) { return tl::unexpected(unsupported_webview_error()); }
+Result<void> Win32WindowHost::register_command(std::string, CommandHandler) { return tl::unexpected(Error{"unsupported_by_backend", "windows bridge backend not implemented yet"}); }
+Result<void> Win32WindowHost::emit(std::string, const Json&) { return tl::unexpected(Error{"bridge_unavailable", "windows bridge backend not implemented yet"}); }
 
-Result<Capabilities> WindowsWindowHost::capabilities() const {
+Result<Capabilities> Win32WindowHost::capabilities() const {
   Capabilities caps;
   caps.window.borderless = true;
   caps.window.always_on_top = true;

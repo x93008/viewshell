@@ -6,11 +6,11 @@
 
 namespace viewshell {
 
-class WindowsWindowHost;
+class Win32WindowHost;
 
-class WindowsBackendRuntime final : public BackendRuntime {
+class Win32BackendRuntime final : public BackendRuntime {
 public:
-  ~WindowsBackendRuntime() override;
+  ~Win32BackendRuntime() override;
 
   Result<std::shared_ptr<WindowHost>> create_window(
       std::shared_ptr<RuntimeAppState> app_state,
@@ -25,7 +25,7 @@ public:
       std::shared_ptr<RuntimeWindowState> window_state) override;
 
 private:
-  std::shared_ptr<WindowsWindowHost> active_host_;
+  std::shared_ptr<Win32WindowHost> active_host_;
 };
 
 } // namespace viewshell

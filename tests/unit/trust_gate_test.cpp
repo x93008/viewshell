@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "platform/linux_x11/trust_gate.h"
+#include "bridge/trust_gate.h"
 
 TEST(TrustGate, untrusted_remote_gets_no_bridge) {
   auto state = viewshell::TrustGate::classify(

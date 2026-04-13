@@ -1,6 +1,6 @@
 #pragma once
 
-#include "platform/linux_x11/bridge_driver.h"
+#include "bridge/x11_bridge_driver.h"
 
 namespace viewshell {
 

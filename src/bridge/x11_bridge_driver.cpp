@@ -1,5 +1,5 @@
-#include "bridge_driver.h"
-#include "webview_driver.h"
+#include "bridge/x11_bridge_driver.h"
+#include "webview/x11_webview_driver.h"
 
 #include <string>
 

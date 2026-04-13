@@ -11,8 +11,8 @@
 #include <viewshell/types.h>
 #include <viewshell/options.h>
 #include <viewshell/capabilities.h>
-#include "native_window_handle.h"
-#include "resource_protocol.h"
+#include "window/x11_native_window_handle.h"
+#include "webview/resource_protocol.h"
 
 typedef struct _WebKitWebView WebKitWebView;
 typedef struct _WebKitUserContentManager WebKitUserContentManager;
