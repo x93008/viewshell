@@ -1,0 +1,26 @@
+docs/superpowers/specs/2026-04-13-runtime-adapter-move-design.md
+  09b0d74280706126 1-20
+docs/superpowers/plans/2026-04-13-runtime-adapter-move.md
+  09b0d74280706126 1-20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.12",
+  "base_commit_sha": "a2a43ca2d0750008e34cc7d064db069a057d5065",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 40,
+      "total_deletions": 0,
+      "accepted_lines": 40,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/8911e837fa1975d4bac96d372018ba48d4735943b79c8f89280dd81b740f8d52"
+    }
+  }
+}
