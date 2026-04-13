@@ -2,7 +2,7 @@
 
 #include <mutex>
 
-#include "platform/x11/kernel_resolver.h"
+#include "webview/engine_resolver.h"
 #include "platform/x11/x11_window_host.h"
 #include "viewshell/runtime_state.h"
 
@@ -27,7 +27,7 @@ Result<std::shared_ptr<WindowHost>> X11BackendRuntime::create_window(
     std::shared_ptr<RuntimeWindowState> window_state,
     const NormalizedAppOptions& app_options,
     const WindowOptions& window_options) {
-  auto resolved = KernelResolver::resolve(to_app_options(app_options));
+  auto resolved = EngineResolver::resolve(to_app_options(app_options));
   if (!resolved) {
     return tl::unexpected(resolved.error());
   }

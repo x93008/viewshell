@@ -1,4 +1,4 @@
-#include "kernel_resolver.h"
+#include "webview/engine_resolver.h"
 
 #include <algorithm>
 #include <dlfcn.h>
@@ -27,7 +27,7 @@ Capabilities linux_webkit_capabilities() {
 
 } // namespace
 
-std::vector<std::string> KernelResolver::candidate_paths(const AppOptions& options) {
+std::vector<std::string> EngineResolver::candidate_paths(const AppOptions& options) {
   std::vector<std::string> paths;
   if (options.engine_path.has_value()) {
     paths.push_back(*options.engine_path);
@@ -37,7 +37,7 @@ std::vector<std::string> KernelResolver::candidate_paths(const AppOptions& optio
   return paths;
 }
 
-Result<ResolvedEngine> KernelResolver::resolve_with_probe(const AppOptions& options, ProbeFn probe) {
+Result<ResolvedEngine> EngineResolver::resolve_with_probe(const AppOptions& options, ProbeFn probe) {
   if (options.require_engine.has_value() && !is_compatible_engine(*options.require_engine)) {
     return tl::unexpected(Error{
       .code = "engine_incompatible",
@@ -88,7 +88,7 @@ Result<ResolvedEngine> KernelResolver::resolve_with_probe(const AppOptions& opti
   });
 }
 
-Result<ResolvedEngine> KernelResolver::resolve(const AppOptions& options) {
+Result<ResolvedEngine> EngineResolver::resolve(const AppOptions& options) {
   ProbeFn default_probe = [](std::string_view candidate) -> ProbeResult {
     void* handle = dlopen(std::string(candidate).c_str(), RTLD_LAZY | RTLD_LOCAL);
     if (!handle) {

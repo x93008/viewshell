@@ -15,7 +15,7 @@ struct ResolvedEngine {
   Capabilities capabilities;
 };
 
-class KernelResolver {
+class EngineResolver {
 public:
   struct ProbeResult {
     bool library_found = false;

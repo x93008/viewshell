@@ -21,7 +21,7 @@ else()
     platform/x11/x11_backend_runtime.cpp
     platform/x11/x11_window_host.cpp
     window/x11_window_driver.cpp
-    platform/x11/kernel_resolver.cpp
+    webview/engine_resolver.cpp
     webview/resource_protocol.cpp
     webview/x11_webview_driver.cpp
     bridge/x11_bridge_driver.cpp
