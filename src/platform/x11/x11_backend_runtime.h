@@ -6,11 +6,11 @@
 
 namespace viewshell {
 
-class LinuxX11WindowHost;
+class X11WindowHost;
 
-class LinuxX11BackendRuntime final : public BackendRuntime {
+class X11BackendRuntime final : public BackendRuntime {
 public:
-  ~LinuxX11BackendRuntime() override;
+  ~X11BackendRuntime() override;
 
   Result<std::shared_ptr<WindowHost>> create_window(
       std::shared_ptr<RuntimeAppState> app_state,
@@ -25,7 +25,7 @@ public:
       std::shared_ptr<RuntimeWindowState> window_state) override;
 
 private:
-  std::shared_ptr<LinuxX11WindowHost> active_host_;
+  std::shared_ptr<X11WindowHost> active_host_;
 };
 
 } // namespace viewshell

@@ -1,21 +1,21 @@
 #ifdef _WIN32
 
-#include "windows_backend_runtime.h"
+#include "win32_backend_runtime.h"
 
 #include <mutex>
 
-#include "platform/windows/windows_window_host.h"
+#include "platform/windows/win32_window_host.h"
 #include "viewshell/runtime_state.h"
 
 namespace viewshell {
 
-WindowsBackendRuntime::~WindowsBackendRuntime() = default;
+Win32BackendRuntime::~Win32BackendRuntime() = default;
 
-Result<std::shared_ptr<WindowHost>> WindowsBackendRuntime::create_window(
+Result<std::shared_ptr<WindowHost>> Win32BackendRuntime::create_window(
     std::shared_ptr<RuntimeAppState> app_state,
     std::shared_ptr<RuntimeWindowState> window_state,
     const NormalizedAppOptions&, const WindowOptions& window_options) {
-  auto host = WindowsWindowHost::create(app_state, window_state, window_options);
+  auto host = Win32WindowHost::create(app_state, window_state, window_options);
   if (!host) {
     return tl::unexpected(host.error());
   }
@@ -24,7 +24,7 @@ Result<std::shared_ptr<WindowHost>> WindowsBackendRuntime::create_window(
   return std::static_pointer_cast<WindowHost>(active_host_);
 }
 
-Result<void> WindowsBackendRuntime::post(std::shared_ptr<RuntimeAppState> app_state,
+Result<void> Win32BackendRuntime::post(std::shared_ptr<RuntimeAppState> app_state,
     std::function<void()> task) {
   if (!app_state->run_started || app_state->shutdown_started) {
     return tl::unexpected(Error{"invalid_state",
@@ -39,7 +39,7 @@ Result<void> WindowsBackendRuntime::post(std::shared_ptr<RuntimeAppState> app_st
   return {};
 }
 
-Result<int> WindowsBackendRuntime::run(std::shared_ptr<RuntimeAppState> app_state,
+Result<int> Win32BackendRuntime::run(std::shared_ptr<RuntimeAppState> app_state,
     std::shared_ptr<RuntimeWindowState> window_state) {
   if (!window_state->has_window || !active_host_) {
     return tl::unexpected(Error{"invalid_state",

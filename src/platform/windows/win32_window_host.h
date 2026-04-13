@@ -14,14 +14,14 @@ namespace viewshell {
 struct RuntimeAppState;
 struct RuntimeWindowState;
 
-class WindowsWindowHost final : public WindowHost {
+class Win32WindowHost final : public WindowHost {
 public:
-  static Result<std::shared_ptr<WindowsWindowHost>> create(
+  static Result<std::shared_ptr<Win32WindowHost>> create(
       std::shared_ptr<RuntimeAppState> app_state,
       std::shared_ptr<RuntimeWindowState> window_state,
       const WindowOptions& options);
 
-  ~WindowsWindowHost() override;
+  ~Win32WindowHost() override;
 
   void run_message_loop();
 
@@ -54,7 +54,7 @@ public:
   Result<void> emit(std::string name, const Json& payload) override;
 
 private:
-  WindowsWindowHost(std::shared_ptr<RuntimeAppState> app_state,
+  Win32WindowHost(std::shared_ptr<RuntimeAppState> app_state,
       std::shared_ptr<RuntimeWindowState> window_state);
 
   static LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);

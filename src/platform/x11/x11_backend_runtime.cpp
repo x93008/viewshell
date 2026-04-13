@@ -1,9 +1,9 @@
-#include "linux_x11_backend_runtime.h"
+#include "x11_backend_runtime.h"
 
 #include <mutex>
 
 #include "platform/x11/kernel_resolver.h"
-#include "platform/x11/linux_x11_window_host.h"
+#include "platform/x11/x11_window_host.h"
 #include "viewshell/runtime_state.h"
 
 namespace viewshell {
@@ -20,9 +20,9 @@ AppOptions to_app_options(const NormalizedAppOptions& options) {
 
 } // namespace
 
-LinuxX11BackendRuntime::~LinuxX11BackendRuntime() = default;
+X11BackendRuntime::~X11BackendRuntime() = default;
 
-Result<std::shared_ptr<WindowHost>> LinuxX11BackendRuntime::create_window(
+Result<std::shared_ptr<WindowHost>> X11BackendRuntime::create_window(
     std::shared_ptr<RuntimeAppState> app_state,
     std::shared_ptr<RuntimeWindowState> window_state,
     const NormalizedAppOptions& app_options,
@@ -32,7 +32,7 @@ Result<std::shared_ptr<WindowHost>> LinuxX11BackendRuntime::create_window(
     return tl::unexpected(resolved.error());
   }
 
-  auto host = LinuxX11WindowHost::create(app_state, window_state, window_options);
+  auto host = X11WindowHost::create(app_state, window_state, window_options);
   if (!host) {
     return tl::unexpected(host.error());
   }
@@ -41,7 +41,7 @@ Result<std::shared_ptr<WindowHost>> LinuxX11BackendRuntime::create_window(
   return std::static_pointer_cast<WindowHost>(active_host_);
 }
 
-Result<void> LinuxX11BackendRuntime::post(std::shared_ptr<RuntimeAppState> app_state,
+Result<void> X11BackendRuntime::post(std::shared_ptr<RuntimeAppState> app_state,
     std::function<void()> task) {
   if (!app_state->run_started || app_state->shutdown_started) {
     return tl::unexpected(Error{"invalid_state",
@@ -56,7 +56,7 @@ Result<void> LinuxX11BackendRuntime::post(std::shared_ptr<RuntimeAppState> app_s
   return {};
 }
 
-Result<int> LinuxX11BackendRuntime::run(std::shared_ptr<RuntimeAppState> app_state,
+Result<int> X11BackendRuntime::run(std::shared_ptr<RuntimeAppState> app_state,
     std::shared_ptr<RuntimeWindowState> window_state) {
   if (!window_state->has_window || !active_host_) {
     return tl::unexpected(Error{"invalid_state",
