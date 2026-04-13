@@ -1,0 +1,24 @@
+src/platform/linux_x11/webview_driver.cpp
+  09b0d74280706126 89-91
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.12",
+  "base_commit_sha": "d12f2499265d31136e77d1dd1ee9136d5da91628",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 5,
+      "total_deletions": 2,
+      "accepted_lines": 4,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/6453e0efc8f1bcace08828358179534bb64b9247e9f84e17821c43d568b1381d"
+    }
+  }
+}
