@@ -4,7 +4,7 @@
 
 #include <mutex>
 
-#include "platform/windows/win32_window_host.h"
+#include "host/windows/win32_window_host.h"
 #include "viewshell/runtime_state.h"
 
 namespace viewshell {
