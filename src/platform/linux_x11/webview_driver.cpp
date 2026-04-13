@@ -4,6 +4,7 @@
 #include <webkit2/webkit2.h>
 #include <gtk/gtk.h>
 #include <fstream>
+#include <jsc/jsc.h>
 
 namespace viewshell {
 
@@ -64,6 +65,29 @@ static void on_drag_message(WebKitUserContentManager*, WebKitJavascriptResult*, 
 static void on_webview_close(WebKitWebView* wv, gpointer) {
   gtk_widget_destroy(gtk_widget_get_toplevel(GTK_WIDGET(wv)));
 }
+
+static void on_script_message_received(WebKitUserContentManager*,
+    WebKitJavascriptResult* result, gpointer user_data) {
+  auto* callback = static_cast<std::function<void(std::string_view)>*>(user_data);
+  if (!callback) {
+    return;
+  }
+
+  JSCValue* value = webkit_javascript_result_get_js_value(result);
+  if (!value || !jsc_value_is_string(value)) {
+    (*callback)("{}");
+    return;
+  }
+
+  char* js = jsc_value_to_string(value);
+  if (!js) {
+    (*callback)("{}");
+    return;
+  }
+
+  (*callback)(js);
+  g_free(js);
+ }
 
 Result<void> WebviewDriver::attach(NativeWindowHandle native,
                                      const WindowOptions& options) {
@@ -177,6 +201,26 @@ Result<void> WebviewDriver::add_init_script(std::string_view script) {
             WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_START,
             nullptr, nullptr));
   }
+  return {};
+}
+
+Result<void> WebviewDriver::register_script_message_handler(
+    std::string_view name,
+    std::function<void(std::string_view payload)> handler) {
+  if (!attached_ || !user_content_manager_) {
+    return tl::unexpected(Error{"invalid_state", "webview not attached"});
+  }
+
+  auto key = std::string(name);
+  script_message_handlers_[key] = std::move(handler);
+
+  webkit_user_content_manager_register_script_message_handler(
+      user_content_manager_, key.c_str());
+
+  auto detailed_signal = std::string("script-message-received::") + key;
+  g_signal_connect(user_content_manager_, detailed_signal.c_str(),
+      G_CALLBACK(on_script_message_received), &script_message_handlers_[key]);
+
   return {};
 }
 

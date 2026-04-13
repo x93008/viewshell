@@ -8,6 +8,8 @@
 #include "platform/linux_x11/window_driver.h"
 #include "viewshell/runtime_state.h"
 
+#include <nlohmann/json.hpp>
+
 namespace viewshell {
 
 LinuxX11WindowHost::LinuxX11WindowHost(std::shared_ptr<RuntimeAppState> app_state,
@@ -58,6 +60,42 @@ Result<std::shared_ptr<LinuxX11WindowHost>> LinuxX11WindowHost::create(
   if (!bridge_attach) {
     return tl::unexpected(bridge_attach.error());
   }
+
+  host->bridge_driver_->on_raw_message = [invoke_bus = host->invoke_bus_.get(),
+                                             bridge = host->bridge_driver_.get()](std::string_view raw) {
+    auto parsed = nlohmann::json::parse(raw, nullptr, false);
+    if (parsed.is_discarded() || !parsed.is_object()) {
+      return;
+    }
+
+    auto kind_it = parsed.find("kind");
+    auto name_it = parsed.find("name");
+    auto payload_it = parsed.find("payload");
+    if (kind_it == parsed.end() || name_it == parsed.end() || !kind_it->is_string() || !name_it->is_string()) {
+      return;
+    }
+
+    Json payload = payload_it != parsed.end() ? *payload_it : Json::object();
+    std::string kind = *kind_it;
+    std::string name = *name_it;
+
+    if (kind == "invoke") {
+      auto result = invoke_bus->dispatch(name, payload);
+      Json message{{"kind", "invoke_result"}, {"name", name},
+          {"ok", static_cast<bool>(result)},
+          {"payload", result ? *result : Json::object()}};
+      if (!result) {
+        message["error"] = Json{{"code", result.error().code}, {"message", result.error().message}};
+      }
+      (void)bridge->post_to_page(message.dump());
+      return;
+    }
+
+    if (kind == "emit") {
+      Json message{{"kind", "native_event"}, {"name", name}, {"payload", payload}};
+      (void)bridge->post_to_page(message.dump());
+    }
+  };
 
   if (options.asset_root.has_value() && !options.asset_root->empty()) {
     auto load_result = host->webview_driver_->load_file(*options.asset_root);
