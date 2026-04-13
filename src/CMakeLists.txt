@@ -20,3 +20,11 @@ target_sources(viewshell PRIVATE
 )
 
 include(${CMAKE_SOURCE_DIR}/cmake/ViewshellDeps.cmake)
+
+include(GNUInstallDirs)
+install(TARGETS viewshell
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/viewshell
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)

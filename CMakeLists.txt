@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 project(viewshell LANGUAGES CXX)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install CACHE PATH "default install prefix" FORCE)
+endif()
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 file(CREATE_LINK "${CMAKE_BINARY_DIR}/compile_commands.json" "${CMAKE_SOURCE_DIR}/compile_commands.json" SYMBOLIC RESULT _create_link_result)
 if(NOT _create_link_result EQUAL 0)
@@ -12,8 +16,7 @@ find_package(tl-expected REQUIRED)
 find_package(GTest REQUIRED)
 find_package(PkgConfig REQUIRED)
 
+enable_testing()
 add_subdirectory(src)
 add_subdirectory(tests)
 add_subdirectory(examples)
-
-enable_testing()
