@@ -26,7 +26,11 @@
   invokePingEl.addEventListener("click", function () {
     var payload = { value: 42, from: "hello_viewshell" };
     writeLine("page -> native invoke", { name: "app.ping", payload: payload });
-    bridge.invoke("app.ping", payload);
+    bridge.invoke("app.ping", payload).then(function (result) {
+      writeLine("promise resolved", result);
+    }).catch(function (error) {
+      writeLine("promise rejected", error);
+    });
   });
 
   emitEventEl.addEventListener("click", function () {

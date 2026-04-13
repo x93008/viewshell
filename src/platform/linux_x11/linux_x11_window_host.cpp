@@ -71,6 +71,7 @@ Result<std::shared_ptr<LinuxX11WindowHost>> LinuxX11WindowHost::create(
     auto kind_it = parsed.find("kind");
     auto name_it = parsed.find("name");
     auto payload_it = parsed.find("payload");
+    auto request_id_it = parsed.find("requestId");
     if (kind_it == parsed.end() || name_it == parsed.end() || !kind_it->is_string() || !name_it->is_string()) {
       return;
     }
@@ -84,6 +85,9 @@ Result<std::shared_ptr<LinuxX11WindowHost>> LinuxX11WindowHost::create(
       Json message{{"kind", "invoke_result"}, {"name", name},
           {"ok", static_cast<bool>(result)},
           {"payload", result ? *result : Json::object()}};
+      if (request_id_it != parsed.end() && request_id_it->is_number_unsigned()) {
+        message["requestId"] = *request_id_it;
+      }
       if (!result) {
         message["error"] = Json{{"code", result.error().code}, {"message", result.error().message}};
       }

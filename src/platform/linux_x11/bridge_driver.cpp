@@ -10,23 +10,51 @@ namespace {
 constexpr const char* kBridgeBootstrap = R"JS((function () {
   if (window.__viewshell) return;
 
-  function post(kind, name, payload) {
+  var nextRequestId = 1;
+  var pending = new Map();
+
+  function post(kind, name, payload, requestId) {
     if (!window.webkit || !window.webkit.messageHandlers || !window.webkit.messageHandlers.viewshellBridge) {
       return;
     }
     window.webkit.messageHandlers.viewshellBridge.postMessage(JSON.stringify({
       kind: kind,
       name: name,
-      payload: payload || {}
+      payload: payload || {},
+      requestId: requestId || null
     }));
   }
 
+  window.addEventListener('viewshell:message', function (event) {
+    var detail = event.detail || {};
+    if (detail.kind !== 'invoke_result' || detail.requestId == null) {
+      return;
+    }
+
+    var entry = pending.get(detail.requestId);
+    if (!entry) {
+      return;
+    }
+
+    pending.delete(detail.requestId);
+    if (detail.ok) {
+      entry.resolve(detail.payload || {});
+      return;
+    }
+
+    entry.reject(detail.error || { code: 'bridge_error', message: 'unknown bridge error' });
+  });
+
   window.__viewshell = {
     invoke: function (name, args) {
-      post('invoke', name, args || {});
+      var requestId = nextRequestId++;
+      return new Promise(function (resolve, reject) {
+        pending.set(requestId, { resolve: resolve, reject: reject });
+        post('invoke', name, args || {}, requestId);
+      });
     },
     emit: function (name, payload) {
-      post('emit', name, payload || {});
+      post('emit', name, payload || {}, null);
     }
   };
 })();)JS";
