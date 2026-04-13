@@ -86,6 +86,9 @@ Result<void> WebviewDriver::attach(NativeWindowHandle native,
 
   attached_ = true;
 
+  WebKitSettings* settings = webkit_web_view_get_settings(webview_);
+  webkit_settings_set_enable_developer_extras(settings, TRUE);
+
   for (auto& handler : page_load_handlers_) {
     (void)handler;
   }
