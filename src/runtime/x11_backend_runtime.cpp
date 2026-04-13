@@ -3,7 +3,7 @@
 #include <mutex>
 
 #include "webview/engine_resolver.h"
-#include "platform/x11/x11_window_host.h"
+#include "host/x11/x11_window_host.h"
 #include "viewshell/runtime_state.h"
 
 namespace viewshell {

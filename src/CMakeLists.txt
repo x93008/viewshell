@@ -14,12 +14,12 @@ target_sources(viewshell PRIVATE
 if(WIN32)
   target_sources(viewshell PRIVATE
     runtime/win32_backend_runtime.cpp
-    platform/windows/win32_window_host.cpp
+    host/windows/win32_window_host.cpp
   )
 else()
   target_sources(viewshell PRIVATE
     runtime/x11_backend_runtime.cpp
-    platform/x11/x11_window_host.cpp
+    host/x11/x11_window_host.cpp
     window/x11_window_driver.cpp
     webview/engine_resolver.cpp
     webview/resource_protocol.cpp
