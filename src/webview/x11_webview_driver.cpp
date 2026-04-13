@@ -1,5 +1,5 @@
-#include "webview_driver.h"
-#include "resource_protocol.h"
+#include "webview/x11_webview_driver.h"
+#include "webview/resource_protocol.h"
 
 #include <webkit2/webkit2.h>
 #include <gtk/gtk.h>

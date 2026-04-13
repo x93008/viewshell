@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "window_driver_test_hooks.h"
-#include <platform/linux_x11/window_driver.h>
+#include <window/x11_window_driver.h>
 #include <gtk/gtk.h>
 
 TEST(WindowDriver, applies_basic_window_operations) {

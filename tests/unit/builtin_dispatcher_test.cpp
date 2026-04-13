@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "platform/linux_x11/builtin_dispatcher.h"
+#include "bridge/builtin_dispatcher.h"
 
 namespace {
 

@@ -2,8 +2,8 @@
 
 #include <mutex>
 
-#include "platform/linux_x11/kernel_resolver.h"
-#include "platform/linux_x11/linux_x11_window_host.h"
+#include "platform/x11/kernel_resolver.h"
+#include "platform/x11/linux_x11_window_host.h"
 #include "viewshell/runtime_state.h"
 
 namespace viewshell {

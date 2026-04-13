@@ -2,10 +2,10 @@
 
 #include <memory>
 
-#include "platform/linux_x11/bridge_driver.h"
-#include "platform/linux_x11/invoke_bus.h"
-#include "platform/linux_x11/webview_driver.h"
-#include "platform/linux_x11/window_driver.h"
+#include "bridge/x11_bridge_driver.h"
+#include "bridge/invoke_bus.h"
+#include "webview/x11_webview_driver.h"
+#include "window/x11_window_driver.h"
 #include "viewshell/runtime_state.h"
 
 #include <nlohmann/json.hpp>

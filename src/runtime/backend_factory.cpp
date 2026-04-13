@@ -7,7 +7,7 @@
 #ifdef _WIN32
 #include "platform/windows/windows_backend_runtime.h"
 #else
-#include "platform/linux_x11/linux_x11_backend_runtime.h"
+#include "platform/x11/linux_x11_backend_runtime.h"
 #endif
 
 namespace viewshell {

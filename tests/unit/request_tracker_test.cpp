@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "platform/linux_x11/request_tracker.h"
+#include "bridge/request_tracker.h"
 
 TEST(RequestTracker, invalidates_pending_requests_on_bridge_reset) {
   viewshell::RequestTracker tracker;
