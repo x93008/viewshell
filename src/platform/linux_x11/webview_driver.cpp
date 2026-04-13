@@ -50,6 +50,21 @@ static void uri_scheme_callback(WebKitURISchemeRequest* request, gpointer) {
   g_bytes_unref(bytes);
 }
 
+static void on_drag_message(WebKitUserContentManager*, WebKitJavascriptResult*, gpointer user_data) {
+  auto* wv = WEBKIT_WEB_VIEW(user_data);
+  GtkWidget* toplevel = gtk_widget_get_toplevel(GTK_WIDGET(wv));
+  GdkDisplay* display = gtk_widget_get_display(GTK_WIDGET(wv));
+  GdkSeat* seat = gdk_display_get_default_seat(display);
+  GdkDevice* pointer = gdk_seat_get_pointer(seat);
+  gint root_x, root_y;
+  gdk_device_get_position(pointer, nullptr, &root_x, &root_y);
+  gtk_window_begin_move_drag(GTK_WINDOW(toplevel), 1, root_x, root_y, GDK_CURRENT_TIME);
+}
+
+static void on_webview_close(WebKitWebView* wv, gpointer) {
+  gtk_widget_destroy(gtk_widget_get_toplevel(GTK_WIDGET(wv)));
+}
+
 Result<void> WebviewDriver::attach(NativeWindowHandle native,
                                      const WindowOptions& options) {
   if (attached_) return {};
@@ -82,24 +97,15 @@ Result<void> WebviewDriver::attach(NativeWindowHandle native,
     GdkRGBA transparent = {0.0, 0.0, 0.0, 0.0};
     webkit_web_view_set_background_color(webview_, &transparent);
 
-    gtk_widget_add_events(GTK_WIDGET(webview_), GDK_BUTTON_PRESS_MASK);
-    g_signal_connect(GTK_WIDGET(webview_), "button-press-event",
-        G_CALLBACK(+[](GtkWidget* w, GdkEventButton* ev, gpointer) -> gboolean {
-          if (ev->button == 1) {
-            GtkWidget* toplevel = gtk_widget_get_toplevel(w);
-            gtk_window_begin_move_drag(GTK_WINDOW(toplevel),
-                ev->button, (gint)ev->x_root, (gint)ev->y_root, ev->time);
-          }
-          return FALSE;
-        }), nullptr);
+    webkit_user_content_manager_register_script_message_handler(
+        user_content_manager_, "viewshellDrag");
+    g_signal_connect(user_content_manager_,
+        "script-message-received::viewshellDrag",
+        G_CALLBACK(on_drag_message), webview_);
   }
 
   g_signal_connect(GTK_WIDGET(webview_), "close",
-      G_CALLBACK(+[](WebKitWebView* wv, gpointer) -> gboolean {
-        GtkWidget* toplevel = gtk_widget_get_toplevel(GTK_WIDGET(wv));
-        gtk_widget_destroy(toplevel);
-        return TRUE;
-      }), nullptr);
+      G_CALLBACK(on_webview_close), nullptr);
 
   capabilities_.window.borderless = options.borderless;
   capabilities_.window.always_on_top = options.always_on_top;

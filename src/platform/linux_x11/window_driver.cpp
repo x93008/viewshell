@@ -22,6 +22,14 @@ static gboolean on_gtk_focus(GtkWidget*, GdkEventFocus* event, gpointer user_dat
   return FALSE;
 }
 
+static gboolean on_gtk_button_press(GtkWidget* widget, GdkEventButton* event, gpointer) {
+  if (event->button == 1) {
+    gtk_window_begin_move_drag(GTK_WINDOW(widget), event->button,
+        (gint)event->x_root, (gint)event->y_root, event->time);
+  }
+  return FALSE;
+}
+
 WindowDriver::~WindowDriver() {
   on_close = nullptr;
   if (created_ && gtk_window_) {
@@ -46,6 +54,15 @@ Result<NativeWindowHandle> WindowDriver::create(const WindowOptions& options) {
 
   if (options.borderless) {
     gtk_window_set_decorated(GTK_WINDOW(gtk_window_), FALSE);
+    gtk_widget_set_app_paintable(gtk_window_, TRUE);
+
+    auto screen = gtk_widget_get_screen(gtk_window_);
+    auto visual = gdk_screen_get_rgba_visual(screen);
+    if (visual) gtk_widget_set_visual(gtk_window_, visual);
+
+    gtk_widget_add_events(gtk_window_, GDK_BUTTON_PRESS_MASK);
+    g_signal_connect(gtk_window_, "button-press-event",
+        G_CALLBACK(on_gtk_button_press), nullptr);
   }
 
   if (options.always_on_top) {
