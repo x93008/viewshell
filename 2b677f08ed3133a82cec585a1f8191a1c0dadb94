@@ -1,0 +1,24 @@
+examples/linux_x11_smoke/CMakeLists.txt
+  09b0d74280706126 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.12",
+  "base_commit_sha": "2b677f08ed3133a82cec585a1f8191a1c0dadb94",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 6,
+      "accepted_lines": 1,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/e0c30f31d99a44b6526f7e8301cc1d96d925314e1023ab88aa03a7463d087185"
+    }
+  }
+}
