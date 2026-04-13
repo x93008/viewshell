@@ -38,7 +38,8 @@
       border: 1px solid rgba(124, 110, 240, 0.2);
       border-radius: 12px;
       padding: 1rem;
-      min-height: 180px;
+      height: 220px;
+      max-height: 220px;
       font-family: "SFMono-Regular", Consolas, monospace;
       font-size: 0.92rem;
       color: #cbd2ff;
@@ -66,8 +67,10 @@
     </div>
     <div class="actions">
       <button id="invokePing">Invoke app.ping</button>
-      <button id="invokeMissing">Invoke missing command</button>
+      <button id="invokeFail">Invoke app.fail</button>
       <button id="emitEvent">Emit native-ready</button>
+      <button id="subscribeEvent">Subscribe native-ready</button>
+      <button id="unsubscribeEvent">Unsubscribe native-ready</button>
       <a href="https://github.com/x93008/viewshell">GitHub</a>
     </div>
     <div class="console" id="console">Waiting for bridge traffic...</div>

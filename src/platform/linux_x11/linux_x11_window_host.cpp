@@ -62,7 +62,8 @@ Result<std::shared_ptr<LinuxX11WindowHost>> LinuxX11WindowHost::create(
   }
 
   host->bridge_driver_->on_raw_message = [invoke_bus = host->invoke_bus_.get(),
-                                             bridge = host->bridge_driver_.get()](std::string_view raw) {
+                                             bridge = host->bridge_driver_.get(),
+                                             host_ptr = host.get()](std::string_view raw) {
     auto parsed = nlohmann::json::parse(raw, nullptr, false);
     if (parsed.is_discarded() || !parsed.is_object()) {
       return;
@@ -95,9 +96,21 @@ Result<std::shared_ptr<LinuxX11WindowHost>> LinuxX11WindowHost::create(
       return;
     }
 
+    if (kind == "subscribe") {
+      host_ptr->subscribed_events_.insert(name);
+      return;
+    }
+
+    if (kind == "unsubscribe") {
+      host_ptr->subscribed_events_.erase(name);
+      return;
+    }
+
     if (kind == "emit") {
-      Json message{{"kind", "native_event"}, {"name", name}, {"payload", payload}};
-      (void)bridge->post_to_page(message.dump());
+      if (host_ptr->subscribed_events_.count(name)) {
+        Json message{{"kind", "native_event"}, {"name", name}, {"payload", payload}};
+        (void)bridge->post_to_page(message.dump());
+      }
     }
   };
 
@@ -235,13 +248,16 @@ Result<void> LinuxX11WindowHost::register_command(std::string name, CommandHandl
 }
 
 Result<void> LinuxX11WindowHost::emit(std::string name, const Json& payload) {
+  if (!bridge_driver_->is_ready()) {
+    return tl::unexpected(Error{"bridge_unavailable", "bridge is not active"});
+  }
+  if (!subscribed_events_.count(name)) {
+    return {};
+  }
   Json message{{"kind", "native_event"}, {"name", name}, {"payload", payload}};
   auto raw = message.dump();
   auto result = bridge_driver_->post_to_page(raw);
   if (!result) {
-    if (result.error().code == "invalid_state") {
-      return tl::unexpected(Error{"bridge_unavailable", "bridge is not active"});
-    }
     return tl::unexpected(result.error());
   }
   return {};

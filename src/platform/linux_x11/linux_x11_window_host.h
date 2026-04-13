@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <unordered_set>
 
 #include <viewshell/options.h>
 
@@ -64,6 +65,7 @@ private:
   std::unique_ptr<InvokeBus> invoke_bus_;
   std::unique_ptr<WindowDriver> window_driver_;
   std::unique_ptr<WebviewDriver> webview_driver_;
+  std::unordered_set<std::string> subscribed_events_;
 };
 
 } // namespace viewshell

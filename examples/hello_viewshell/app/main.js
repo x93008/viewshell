@@ -2,8 +2,11 @@
   var statusEl = document.getElementById("status");
   var consoleEl = document.getElementById("console");
   var invokePingEl = document.getElementById("invokePing");
-  var invokeMissingEl = document.getElementById("invokeMissing");
+  var invokeFailEl = document.getElementById("invokeFail");
   var emitEventEl = document.getElementById("emitEvent");
+  var subscribeEventEl = document.getElementById("subscribeEvent");
+  var unsubscribeEventEl = document.getElementById("unsubscribeEvent");
+  var unsubscribeNativeReady = null;
 
   function writeLine(title, payload) {
     var text = title + "\n" + JSON.stringify(payload, null, 2);
@@ -18,11 +21,7 @@
   }
 
   statusEl.textContent = "Bridge ready";
-  writeLine("bridge:ready", { invoke: true, emit: true });
-
-  bridge.on("native-ready", function (payload) {
-    writeLine("native event listener", { name: "native-ready", payload: payload });
-  });
+  writeLine("bridge:ready", { invoke: true, emit: true, on: true, off: true });
 
   window.addEventListener("viewshell:message", function (event) {
     writeLine("native -> page", event.detail);
@@ -38,10 +37,10 @@
     });
   });
 
-  invokeMissingEl.addEventListener("click", function () {
+  invokeFailEl.addEventListener("click", function () {
     var payload = { from: "hello_viewshell" };
-    writeLine("page -> native invoke", { name: "app.missing", payload: payload });
-    bridge.invoke("app.missing", payload).then(function (result) {
+    writeLine("page -> native invoke", { name: "app.fail", payload: payload });
+    bridge.invoke("app.fail", payload).then(function (result) {
       writeLine("unexpected resolve", result);
     }).catch(function (error) {
       writeLine("promise rejected", error);
@@ -52,5 +51,26 @@
     var payload = { from: "hello_viewshell", at: new Date().toISOString() };
     writeLine("page -> native emit", { name: "native-ready", payload: payload });
     bridge.emit("native-ready", payload);
+  });
+
+  subscribeEventEl.addEventListener("click", function () {
+    if (unsubscribeNativeReady) {
+      writeLine("subscription", { name: "native-ready", status: "already subscribed" });
+      return;
+    }
+    unsubscribeNativeReady = bridge.on("native-ready", function (payload) {
+      writeLine("native event listener", { name: "native-ready", payload: payload });
+    });
+    writeLine("subscription", { name: "native-ready", status: "subscribed" });
+  });
+
+  unsubscribeEventEl.addEventListener("click", function () {
+    if (!unsubscribeNativeReady) {
+      writeLine("subscription", { name: "native-ready", status: "already unsubscribed" });
+      return;
+    }
+    unsubscribeNativeReady();
+    unsubscribeNativeReady = null;
+    writeLine("subscription", { name: "native-ready", status: "unsubscribed" });
   });
 })();
