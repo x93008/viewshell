@@ -1,0 +1,36 @@
+src/platform/linux_x11/webview_driver.cpp
+  09b0d74280706126 7,69-91,207-211,213-223
+src/platform/linux_x11/bridge_driver.cpp
+  09b0d74280706126 4-5,8-32,34-35,38-58,67-74
+docs/superpowers/plans/2026-04-13-minimal-js-native-bridge.md
+  09b0d74280706126 1-31
+src/platform/linux_x11/linux_x11_window_host.cpp
+  09b0d74280706126 11-12,64-98
+tests/unit/bridge_driver_test.cpp
+  09b0d74280706126 30-42
+src/platform/linux_x11/webview_driver.h
+  09b0d74280706126 10,33-35,57
+docs/superpowers/specs/2026-04-13-minimal-js-native-bridge-design.md
+  09b0d74280706126 1-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.12",
+  "base_commit_sha": "923daa2e41057ce3632c6b4924e100f8528904d6",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 220,
+      "total_deletions": 0,
+      "accepted_lines": 220,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/a8d07310480b368aec9581439b4b7a4026f39c17d9913efe06d3f7da24ffe2f7"
+    }
+  }
+}
