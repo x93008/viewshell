@@ -7,6 +7,7 @@
 #include <optional>
 #include <filesystem>
 #include <memory>
+#include <unordered_map>
 #include <viewshell/types.h>
 #include <viewshell/options.h>
 #include <viewshell/capabilities.h>
@@ -29,6 +30,9 @@ public:
   Result<void> reload();
   Result<void> evaluate_script(std::string_view script);
   Result<void> add_init_script(std::string_view script);
+  Result<void> register_script_message_handler(
+      std::string_view name,
+      std::function<void(std::string_view payload)> handler);
   Result<void> open_devtools();
   Result<void> close_devtools();
   Result<void> on_page_load(PageLoadHandler handler);
@@ -50,6 +54,7 @@ private:
   std::vector<PageLoadHandler> page_load_handlers_;
   NavigationHandler navigation_handler_;
   std::vector<std::string> init_scripts_;
+  std::unordered_map<std::string, std::function<void(std::string_view)>> script_message_handlers_;
   std::unique_ptr<ResourceProtocol> resource_protocol_;
 };
 

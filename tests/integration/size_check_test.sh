@@ -3,7 +3,7 @@ set -euo pipefail
 
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 root_dir="$(cd "$script_dir/../.." && pwd)"
-build_dir="$root_dir/build/Debug"
+build_dir="$root_dir/build/Debug/examples/hello_viewshell"
 
 bundle_dir="$build_dir/hello_viewshell_bundle"
 mkdir -p "$bundle_dir/app"
@@ -16,8 +16,8 @@ fi
 cp "$build_dir/hello_viewshell" "$bundle_dir/"
 strip "$bundle_dir/hello_viewshell"
 
-cp "$root_dir/examples/hello_viewshell/app/index.html" "$bundle_dir/app/"
-cp "$root_dir/examples/hello_viewshell/app/main.js" "$bundle_dir/app/"
+cp "$build_dir/app/index.html" "$bundle_dir/app/"
+cp "$build_dir/app/main.js" "$bundle_dir/app/"
 
 actual_size=$(du -sb "$bundle_dir" | cut -f1)
 max_size=10485760

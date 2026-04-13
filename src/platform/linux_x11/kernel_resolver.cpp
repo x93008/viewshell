@@ -1,6 +1,7 @@
 #include "kernel_resolver.h"
 
 #include <algorithm>
+#include <dlfcn.h>
 
 namespace viewshell {
 
@@ -8,6 +9,20 @@ namespace {
 
 bool is_compatible_engine(const std::string& engine) {
   return engine == "webkit" || engine == "webkitgtk";
+}
+
+Capabilities linux_webkit_capabilities() {
+  Capabilities caps;
+  caps.window.borderless = true;
+  caps.window.transparent = true;
+  caps.window.always_on_top = true;
+  caps.window.native_drag = true;
+  caps.webview.devtools = true;
+  caps.webview.resource_protocol = true;
+  caps.webview.script_eval = true;
+  caps.bridge.invoke = true;
+  caps.bridge.native_events = true;
+  return caps;
 }
 
 } // namespace
@@ -75,7 +90,17 @@ Result<ResolvedEngine> KernelResolver::resolve_with_probe(const AppOptions& opti
 
 Result<ResolvedEngine> KernelResolver::resolve(const AppOptions& options) {
   ProbeFn default_probe = [](std::string_view candidate) -> ProbeResult {
-    return {.library_found = false, .init_success = false, .required_probes_ok = false};
+    void* handle = dlopen(std::string(candidate).c_str(), RTLD_LAZY | RTLD_LOCAL);
+    if (!handle) {
+      return {.library_found = false, .init_success = false, .required_probes_ok = false};
+    }
+    dlclose(handle);
+    return {
+      .library_found = true,
+      .init_success = true,
+      .required_probes_ok = true,
+      .capabilities = linux_webkit_capabilities(),
+    };
   };
   return resolve_with_probe(options, default_probe);
 }

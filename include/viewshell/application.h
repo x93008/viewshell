@@ -13,8 +13,8 @@ Result<NormalizedAppOptions> normalize_app_options_for_test(const AppOptions& op
 }
 
 struct RuntimeAppState;
-class WindowDriver;
-class WebviewDriver;
+struct RuntimeWindowState;
+class BackendRuntime;
 
 class Application {
 public:
@@ -36,15 +36,18 @@ private:
   NormalizedAppOptions opts_;
   std::shared_ptr<RuntimeAppState> app_state_;
   std::shared_ptr<RuntimeWindowState> window_state_;
-  std::unique_ptr<WindowDriver> window_driver_;
-  std::unique_ptr<WebviewDriver> webview_driver_;
+  std::unique_ptr<BackendRuntime> backend_runtime_;
 
+  friend bool HasBackendRuntimeForTest(const Application& app);
+  friend bool HasWindowHostForTest(const Application& app);
+  friend bool WindowCapabilitiesAvailableForTest(const Application& app);
   friend void MarkRunStartedForTest(Application&);
   friend void MarkShutdownStartedForTest(Application&);
   friend void EnterRunLoopForTest(Application&);
   friend Result<int> FinishRunForTest(Application&);
   friend void PumpPostedTasksForTest(Application&);
   friend std::vector<std::string> TakeRuntimeLogsForTest(Application&);
+
 };
 
 } // namespace viewshell

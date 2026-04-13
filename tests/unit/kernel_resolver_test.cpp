@@ -60,6 +60,13 @@ TEST(KernelResolver, rejects_non_webkit_required_engine) {
   EXPECT_EQ(result.error().code, "engine_incompatible");
 }
 
+TEST(KernelResolver, default_resolve_supports_linux_webkit_runtime) {
+  auto result = viewshell::KernelResolver::resolve({});
+  ASSERT_TRUE(result);
+  EXPECT_EQ(result->engine_id, "webkitgtk");
+  EXPECT_TRUE(result->capabilities.webview.resource_protocol);
+}
+
 TEST(KernelResolver, uses_explicit_engine_path_first) {
   viewshell::AppOptions options;
   options.engine_path = "/tmp/libwebkit-custom.so";

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <deque>
@@ -13,8 +14,7 @@
 
 namespace viewshell {
 
-class WindowDriver;
-class WebviewDriver;
+class WindowHost;
 
 struct RuntimeAppState {
   bool run_started = false;
@@ -31,13 +31,11 @@ struct RuntimeWindowState {
   bool has_window = false;
   bool is_closed = false;
   bool close_acknowledged = false;
-  std::unordered_map<std::string, CommandHandler> command_registry;
   std::vector<PageLoadHandler> page_load_handlers;
   NavigationHandler navigation_handler;
   std::vector<std::string> init_scripts;
   std::optional<Capabilities> resolved_capabilities;
-  WindowDriver* window_driver = nullptr;
-  WebviewDriver* webview_driver = nullptr;
+  std::shared_ptr<WindowHost> window_host;
 };
 
 } // namespace viewshell

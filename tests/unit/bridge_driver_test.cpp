@@ -27,3 +27,16 @@ TEST(BridgeDriver, post_to_page_delivers_to_active_generation_only) {
   ASSERT_TRUE(viewshell::TriggerBridgeResetForTest(driver));
   ASSERT_FALSE(driver.post_to_page("after-reset"));
 }
+
+TEST(BridgeDriver, attach_injects_bootstrap_and_treats_script_messages_as_ready) {
+  viewshell::BridgeDriver driver;
+  bool ready = false;
+  std::string raw;
+  driver.on_bridge_ready = [&] { ready = true; };
+  driver.on_raw_message = [&](std::string_view msg) { raw = msg; };
+
+  ASSERT_TRUE(viewshell::TriggerBridgeReadyForTest(driver));
+  ASSERT_TRUE(viewshell::TriggerBridgeRawMessageForTest(driver, R"({"kind":"invoke","name":"app.ping","payload":{}})"));
+  EXPECT_TRUE(ready);
+  EXPECT_NE(raw.find("\"kind\":\"invoke\""), std::string::npos);
+}

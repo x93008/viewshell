@@ -4,10 +4,13 @@ target_include_directories(viewshell PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_include_directories(viewshell PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_sources(viewshell PRIVATE
+  runtime/backend_factory.cpp
   viewshell/application.cpp
   viewshell/public_types.cpp
   viewshell/window_handle.cpp
   viewshell/bridge_handle.cpp
+  platform/linux_x11/linux_x11_backend_runtime.cpp
+  platform/linux_x11/linux_x11_window_host.cpp
   platform/linux_x11/window_driver.cpp
   platform/linux_x11/kernel_resolver.cpp
   platform/linux_x11/resource_protocol.cpp
