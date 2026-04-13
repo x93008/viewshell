@@ -1,0 +1,44 @@
+docs/bridge-api.md
+  09b0d74280706126 1-44
+src/platform/linux_x11/linux_x11_window_host.cpp
+  09b0d74280706126 65-66,99-108,110-113,251-256
+examples/hello_viewshell/app/index.html
+  09b0d74280706126 41-42,70,72-73
+docs/superpowers/specs/2026-04-13-bridge-playground-and-subscriptions-design.md
+  09b0d74280706126 1-18
+docs/superpowers/plans/2026-04-13-bridge-playground-and-subscriptions.md
+  09b0d74280706126 1-26
+src/platform/linux_x11/linux_x11_window_host.h
+  09b0d74280706126 4,68
+src/platform/linux_x11/bridge_driver.cpp
+  09b0d74280706126 68,71-73,80,82-86
+examples/hello_viewshell/app/main.js
+  09b0d74280706126 5,7-9,24,40,42-43,55-74
+examples/hello_viewshell/main.cpp
+  09b0d74280706126 39-42
+README.md
+  09b0d74280706126 54,60-61
+src/platform/linux_x11/bridge_driver.h
+  09b0d74280706126 22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.12",
+  "base_commit_sha": "d61f6694b8ed6a990a596771ce0a3de3b7860d23",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 172,
+      "total_deletions": 29,
+      "accepted_lines": 164,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/b8e9d76ddc7de6811a7de761a92a4549a6b38bc72ea3f523cad5acaf1ed07658"
+    }
+  }
+}
