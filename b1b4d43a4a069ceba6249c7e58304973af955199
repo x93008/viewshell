@@ -1,0 +1,24 @@
+docs/superpowers/specs/2026-04-13-runtime-backend-refactor-design.md
+  09b0d74280706126 1-301
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.12",
+  "base_commit_sha": "b1b4d43a4a069ceba6249c7e58304973af955199",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 301,
+      "total_deletions": 0,
+      "accepted_lines": 302,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/7d0c7982e7c243b0efdc29e862f0a05ad10e490257be32cd87b551b6c79fc207"
+    }
+  }
+}
