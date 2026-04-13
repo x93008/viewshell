@@ -1,0 +1,32 @@
+src/platform/linux_x11/bridge_driver.cpp
+  09b0d74280706126 31-36,55,65-78
+examples/hello_viewshell/app/index.html
+  09b0d74280706126 69
+examples/hello_viewshell/app/main.js
+  09b0d74280706126 5,23-26,41-45
+README.md
+  09b0d74280706126 38-60
+src/platform/linux_x11/linux_x11_window_host.cpp
+  09b0d74280706126 238
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.12",
+  "base_commit_sha": "9803cb89ddbae985199344a4e2f9baaf8d69a7a3",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 61,
+      "total_deletions": 1,
+      "accepted_lines": 61,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/4666540b966ad2377e7764907a32e4c377d68195de9a974249ecaabb92eeaedc"
+    }
+  }
+}
