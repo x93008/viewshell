@@ -1,9 +1,3 @@
-find_package(nlohmann_json REQUIRED)
-find_package(tl-expected REQUIRED)
-find_package(GTest REQUIRED)
-
-find_package(PkgConfig REQUIRED)
-
 target_link_libraries(viewshell PUBLIC nlohmann_json::nlohmann_json tl::expected)
 
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)

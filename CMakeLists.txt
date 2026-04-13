@@ -1,27 +1,13 @@
 cmake_minimum_required(VERSION 3.16)
 project(viewshell LANGUAGES CXX)
 
-add_library(viewshell STATIC)
-include(cmake/ViewshellDeps.cmake)
-target_compile_features(viewshell PUBLIC cxx_std_17)
-target_sources(viewshell PRIVATE
-  src/viewshell/application.cpp
-  src/viewshell/public_types.cpp
-  src/viewshell/window_handle.cpp
-  src/viewshell/bridge_handle.cpp
-  src/platform/linux_x11/window_driver.cpp
-  src/platform/linux_x11/kernel_resolver.cpp
-  src/platform/linux_x11/resource_protocol.cpp
-  src/platform/linux_x11/webview_driver.cpp
-  src/platform/linux_x11/bridge_driver.cpp
-  src/platform/linux_x11/trust_gate.cpp
-  src/platform/linux_x11/request_tracker.cpp
-  src/platform/linux_x11/builtin_dispatcher.cpp
-  src/platform/linux_x11/invoke_bus.cpp
-)
-target_include_directories(viewshell PUBLIC include)
-target_include_directories(viewshell PRIVATE src)
+find_package(nlohmann_json REQUIRED)
+find_package(tl-expected REQUIRED)
+find_package(GTest REQUIRED)
+find_package(PkgConfig REQUIRED)
 
-enable_testing()
+add_subdirectory(src)
 add_subdirectory(tests)
 add_subdirectory(examples)
+
+enable_testing()
