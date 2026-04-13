@@ -79,14 +79,35 @@ public:
     return capabilities_value;
   }
 
+  viewshell::Result<void> register_command(std::string name, viewshell::CommandHandler handler) override {
+    if (commands.count(name)) {
+      return tl::unexpected(viewshell::Error{"command_already_registered", "duplicate"});
+    }
+    commands.emplace(std::move(name), std::move(handler));
+    return {};
+  }
+
+  viewshell::Result<void> emit(std::string name, const viewshell::Json& payload) override {
+    last_event_name = std::move(name);
+    last_event_payload = payload;
+    if (!bridge_active) {
+      return tl::unexpected(viewshell::Error{"bridge_unavailable", "bridge is not active"});
+    }
+    return {};
+  }
+
   std::string last_title;
   std::string last_url;
   std::string last_file;
   std::string last_script;
+  std::string last_event_name;
+  viewshell::Json last_event_payload;
   std::vector<std::string> init_scripts;
   viewshell::PageLoadHandler page_load_handler;
   viewshell::NavigationHandler navigation_handler;
   viewshell::Capabilities capabilities_value;
+  std::unordered_map<std::string, viewshell::CommandHandler> commands;
+  bool bridge_active = false;
 };
 
 } // namespace
@@ -126,6 +147,32 @@ TEST(WindowHandleLifecycle, delegates_webview_ops_to_window_host) {
   ASSERT_TRUE(handle.load_url("https://example.com/runtime"));
 
   EXPECT_EQ(host->last_url, "https://example.com/runtime");
+}
+
+TEST(WindowHandleLifecycle, bridge_handle_delegates_registration_and_emit_to_window_host) {
+  auto state = std::make_shared<viewshell::RuntimeWindowState>();
+  state->has_window = true;
+  auto host = std::make_shared<RecordingWindowHost>();
+  state->window_host = host;
+
+  viewshell::WindowHandle handle(state);
+  auto bridge = handle.bridge();
+  ASSERT_TRUE(bridge);
+
+  ASSERT_TRUE(bridge->register_command("app.ping",
+      [](const viewshell::Json&) -> viewshell::Result<viewshell::Json> {
+        return viewshell::Json{{"ok", true}};
+      }));
+  EXPECT_TRUE(host->commands.count("app.ping"));
+
+  auto emit_result = bridge->emit("native-ready", viewshell::Json{{"ok", true}});
+  ASSERT_FALSE(emit_result);
+  EXPECT_EQ(emit_result.error().code, "bridge_unavailable");
+
+  host->bridge_active = true;
+  ASSERT_TRUE(bridge->emit("native-ready", viewshell::Json{{"ok", true}}));
+  EXPECT_EQ(host->last_event_name, "native-ready");
+  EXPECT_EQ(host->last_event_payload["ok"], true);
 }
 
 TEST(WindowHandleLifecycle, reports_unsupported_backend_for_window_ops_when_no_window_host_present) {

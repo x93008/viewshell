@@ -2,6 +2,8 @@
 
 #include <memory>
 
+#include "platform/linux_x11/bridge_driver.h"
+#include "platform/linux_x11/invoke_bus.h"
 #include "platform/linux_x11/webview_driver.h"
 #include "platform/linux_x11/window_driver.h"
 #include "viewshell/runtime_state.h"
@@ -26,6 +28,8 @@ Result<std::shared_ptr<LinuxX11WindowHost>> LinuxX11WindowHost::create(
 
   host->window_driver_ = std::make_unique<WindowDriver>();
   host->webview_driver_ = std::make_unique<WebviewDriver>();
+  host->bridge_driver_ = std::make_unique<BridgeDriver>();
+  host->invoke_bus_ = std::make_unique<InvokeBus>();
 
   host->window_driver_->on_close = [app_state = weak_app_state,
                                        window_state = weak_window_state,
@@ -48,6 +52,11 @@ Result<std::shared_ptr<LinuxX11WindowHost>> LinuxX11WindowHost::create(
   auto attach = host->webview_driver_->attach(*native, options);
   if (!attach) {
     return tl::unexpected(attach.error());
+  }
+
+  auto bridge_attach = host->bridge_driver_->attach(*host->webview_driver_);
+  if (!bridge_attach) {
+    return tl::unexpected(bridge_attach.error());
   }
 
   if (options.asset_root.has_value() && !options.asset_root->empty()) {
@@ -177,6 +186,23 @@ Result<Capabilities> LinuxX11WindowHost::capabilities() const {
     }
   }
   return webview_driver_->capabilities();
+}
+
+Result<void> LinuxX11WindowHost::register_command(std::string name, CommandHandler handler) {
+  return invoke_bus_->register_command(std::move(name), std::move(handler));
+}
+
+Result<void> LinuxX11WindowHost::emit(std::string name, const Json& payload) {
+  Json message{{"name", name}, {"payload", payload}};
+  auto raw = message.dump();
+  auto result = bridge_driver_->post_to_page(raw);
+  if (!result) {
+    if (result.error().code == "invalid_state") {
+      return tl::unexpected(Error{"bridge_unavailable", "bridge is not active"});
+    }
+    return tl::unexpected(result.error());
+  }
+  return {};
 }
 
 } // namespace viewshell

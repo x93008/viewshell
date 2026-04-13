@@ -46,8 +46,13 @@ bool InvokeBus::emit(const std::string& event_name, const Json& payload) {
   return true;
 }
 
-void InvokeBus::register_command(const std::string& name, CommandHandler handler) {
-  commands_[name] = std::move(handler);
+Result<void> InvokeBus::register_command(const std::string& name, CommandHandler handler) {
+  if (commands_.count(name)) {
+    return tl::unexpected(Error{"command_already_registered",
+        "command '" + name + "' is already registered"});
+  }
+  commands_.emplace(name, std::move(handler));
+  return {};
 }
 
 void InvokeBus::drop_subscriptions(const std::string& reason) {

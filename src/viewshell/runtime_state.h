@@ -31,7 +31,6 @@ struct RuntimeWindowState {
   bool has_window = false;
   bool is_closed = false;
   bool close_acknowledged = false;
-  std::unordered_map<std::string, CommandHandler> command_registry;
   std::vector<PageLoadHandler> page_load_handlers;
   NavigationHandler navigation_handler;
   std::vector<std::string> init_scripts;

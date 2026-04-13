@@ -10,6 +10,8 @@ namespace viewshell {
 
 struct RuntimeAppState;
 struct RuntimeWindowState;
+class BridgeDriver;
+class InvokeBus;
 class WindowDriver;
 class WebviewDriver;
 
@@ -49,6 +51,8 @@ public:
   Result<void> on_page_load(PageLoadHandler handler) override;
   Result<void> set_navigation_handler(NavigationHandler handler) override;
   Result<Capabilities> capabilities() const override;
+  Result<void> register_command(std::string name, CommandHandler handler) override;
+  Result<void> emit(std::string name, const Json& payload) override;
 
 private:
   LinuxX11WindowHost(std::shared_ptr<RuntimeAppState> app_state,
@@ -56,6 +60,8 @@ private:
 
   std::weak_ptr<RuntimeAppState> app_state_;
   std::weak_ptr<RuntimeWindowState> window_state_;
+  std::unique_ptr<BridgeDriver> bridge_driver_;
+  std::unique_ptr<InvokeBus> invoke_bus_;
   std::unique_ptr<WindowDriver> window_driver_;
   std::unique_ptr<WebviewDriver> webview_driver_;
 };

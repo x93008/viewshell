@@ -36,6 +36,8 @@ public:
   virtual Result<void> on_page_load(PageLoadHandler handler) = 0;
   virtual Result<void> set_navigation_handler(NavigationHandler handler) = 0;
   virtual Result<Capabilities> capabilities() const = 0;
+  virtual Result<void> register_command(std::string name, CommandHandler handler) = 0;
+  virtual Result<void> emit(std::string name, const Json& payload) = 0;
 };
 
 } // namespace viewshell

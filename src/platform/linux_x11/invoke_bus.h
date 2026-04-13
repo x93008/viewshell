@@ -35,7 +35,7 @@ public:
 
   bool emit(const std::string& event_name, const Json& payload);
 
-  void register_command(const std::string& name, CommandHandler handler);
+  Result<void> register_command(const std::string& name, CommandHandler handler);
   void drop_subscriptions(const std::string& reason);
 
 private:
