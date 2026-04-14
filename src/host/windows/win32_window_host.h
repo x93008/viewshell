@@ -3,11 +3,14 @@
 #ifdef _WIN32
 
 #include <memory>
+#include <unordered_set>
 #include <windows.h>
 
 #include <viewshell/options.h>
 
 #include "runtime/window_host.h"
+
+namespace viewshell { class Win32WebviewHost; class InvokeBus; }
 
 namespace viewshell {
 
@@ -60,9 +63,14 @@ private:
   static LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
   Result<void> ensure_window() const;
   void update_style();
+  RECT client_rect() const;
+  void update_shape();
 
   std::weak_ptr<RuntimeAppState> app_state_;
   std::weak_ptr<RuntimeWindowState> window_state_;
+  std::unique_ptr<Win32WebviewHost> webview_host_;
+  std::unique_ptr<InvokeBus> invoke_bus_;
+  std::unordered_set<std::string> subscribed_events_;
   HWND hwnd_ = nullptr;
   bool borderless_ = false;
   bool always_on_top_ = false;

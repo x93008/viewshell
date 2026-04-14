@@ -8,12 +8,16 @@ int main(int argc, char* argv[]) {
   std::string exe_arg(argv[0]);
   auto exe_dir = std::filesystem::canonical(std::filesystem::path(exe_arg)).parent_path();
   auto asset_path = exe_dir / "app" / "index.html";
+  if (!std::filesystem::exists(asset_path)) {
+    asset_path = exe_dir.parent_path() / "app" / "index.html";
+  }
 
   viewshell::AppOptions app_opts;
 
   auto app = viewshell::Application::create(app_opts);
   if (!app) {
-    std::fprintf(stderr, "failed to create application: %s\n", app.error().code.c_str());
+    std::fprintf(stderr, "failed to create application: %s (%s)\n",
+        app.error().code.c_str(), app.error().message.c_str());
     return 1;
   }
 
@@ -24,7 +28,8 @@ int main(int argc, char* argv[]) {
 
   auto win = app->create_window(win_opts);
   if (!win) {
-    std::fprintf(stderr, "failed to create window: %s\n", win.error().code.c_str());
+    std::fprintf(stderr, "failed to create window: %s (%s)\n",
+        win.error().code.c_str(), win.error().message.c_str());
     return 1;
   }
 
@@ -44,7 +49,8 @@ int main(int argc, char* argv[]) {
 
   auto run_result = app->run();
   if (!run_result) {
-    std::fprintf(stderr, "run failed: %s\n", run_result.error().code.c_str());
+    std::fprintf(stderr, "run failed: %s (%s)\n",
+        run_result.error().code.c_str(), run_result.error().message.c_str());
     return 1;
   }
 
