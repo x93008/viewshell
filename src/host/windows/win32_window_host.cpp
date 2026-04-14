@@ -95,7 +95,7 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
   wc.lpfnWndProc = Win32WindowHost::WindowProc;
   wc.hInstance = GetModuleHandleW(nullptr);
   wc.lpszClassName = class_name;
-  wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+  wc.hCursor = LoadCursorW(nullptr, MAKEINTRESOURCEW(IDC_ARROW));
   RegisterClassW(&wc);
 
   DWORD style = WS_OVERLAPPEDWINDOW;

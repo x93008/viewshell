@@ -2,6 +2,7 @@
 
 #include "webview/win32_webview_host.h"
 
+#include <windows.h>
 #include <string>
 
 #if VIEWSHELL_HAS_WEBVIEW2

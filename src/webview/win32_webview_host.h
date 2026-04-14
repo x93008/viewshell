@@ -2,6 +2,7 @@
 
 #ifdef _WIN32
 
+#include <windows.h>
 #include <string_view>
 
 #if VIEWSHELL_HAS_WEBVIEW2
