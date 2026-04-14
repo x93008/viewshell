@@ -135,7 +135,7 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
 
   DWORD style = WS_OVERLAPPEDWINDOW;
   if (host->borderless_) {
-    style = WS_POPUP | WS_THICKFRAME;
+    style = WS_POPUP;
   }
 
   host->hwnd_ = CreateWindowExW(
@@ -199,7 +199,7 @@ void Win32WindowHost::update_style() {
     return;
   }
 
-  LONG_PTR style = borderless_ ? (WS_POPUP | WS_THICKFRAME) : WS_OVERLAPPEDWINDOW;
+  LONG_PTR style = borderless_ ? WS_POPUP : WS_OVERLAPPEDWINDOW;
   SetWindowLongPtrW(hwnd_, GWL_STYLE, style);
   SetWindowPos(hwnd_, always_on_top_ ? HWND_TOPMOST : HWND_NOTOPMOST,
       0, 0, 0, 0,
@@ -211,7 +211,7 @@ void Win32WindowHost::update_shape() {
     return;
   }
   RECT rect{};
-  GetClientRect(hwnd_, &rect);
+  GetWindowRect(hwnd_, &rect);
   auto width = rect.right - rect.left;
   auto height = rect.bottom - rect.top;
   if (width <= 0 || height <= 0) {
