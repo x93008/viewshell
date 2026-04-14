@@ -5,6 +5,7 @@
 #include <nlohmann/json.hpp>
 #include <string>
 
+#include "bridge/invoke_bus.h"
 #include "webview/win32_webview_host.h"
 #include "viewshell/runtime_state.h"
 
@@ -26,16 +27,81 @@ Error unsupported_webview_error() {
   return Error{"unsupported_by_backend", "windows webview backend not implemented yet"};
 }
 
-constexpr const char* kWinBorderlessBridge = R"JS((function () {
-  if (!window.chrome || !window.chrome.webview) return;
+constexpr const char* kWindowsBridgeBootstrap = R"JS((function () {
+  if (!window.chrome || !window.chrome.webview || window.__viewshell) return;
+
+  var nextRequestId = 1;
+  var pending = new Map();
+  var listeners = new Map();
+
+  function post(kind, name, payload, requestId) {
+    window.chrome.webview.postMessage(JSON.stringify({
+      kind: kind,
+      name: name || null,
+      payload: payload || {},
+      requestId: requestId || null
+    }));
+  }
+
+  window.chrome.webview.addEventListener('message', function (event) {
+    var detail = event && event.data ? event.data : {};
+    window.dispatchEvent(new CustomEvent('viewshell:message', { detail: detail }));
+
+    if (detail.kind === 'invoke_result' && detail.requestId != null) {
+      var entry = pending.get(detail.requestId);
+      if (!entry) return;
+      pending.delete(detail.requestId);
+      if (detail.ok) {
+        entry.resolve(detail.payload || {});
+      } else {
+        entry.reject(detail.error || { code: 'bridge_error', message: 'unknown bridge error' });
+      }
+      return;
+    }
+
+    if (detail.kind === 'native_event') {
+      var entries = listeners.get(detail.name) || [];
+      entries.slice().forEach(function (listener) {
+        listener(detail.payload || {});
+      });
+    }
+  });
+
+  window.__viewshell = {
+    invoke: function (name, args) {
+      var requestId = nextRequestId++;
+      return new Promise(function (resolve, reject) {
+        pending.set(requestId, { resolve: resolve, reject: reject });
+        post('invoke', name, args || {}, requestId);
+      });
+    },
+    emit: function (name, payload) {
+      post('emit', name, payload || {}, null);
+    },
+    on: function (name, listener) {
+      var entries = listeners.get(name) || [];
+      var wasEmpty = entries.length === 0;
+      entries.push(listener);
+      listeners.set(name, entries);
+      if (wasEmpty) post('subscribe', name, {}, null);
+      return function () { window.__viewshell.off(name, listener); };
+    },
+    off: function (name, listener) {
+      var entries = listeners.get(name) || [];
+      var next = entries.filter(function (entry) { return entry !== listener; });
+      listeners.set(name, next);
+      if (entries.length > 0 && next.length === 0) post('unsubscribe', name, {}, null);
+    }
+  };
+
   window.webkit = window.webkit || { messageHandlers: {} };
   window.webkit.messageHandlers.viewshellDrag = {
     postMessage: function (payload) {
-      window.chrome.webview.postMessage(JSON.stringify({ kind: 'drag', payload: payload || 'drag' }));
+      post('drag', null, { value: payload || 'drag' }, null);
     }
   };
   window.__viewshellWinClose = function () {
-    window.chrome.webview.postMessage(JSON.stringify({ kind: 'close' }));
+    post('close', null, {}, null);
   };
 })();)JS";
 
@@ -104,6 +170,7 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
   host->borderless_ = options.borderless;
   host->always_on_top_ = options.always_on_top;
   host->webview_host_ = std::make_unique<Win32WebviewHost>();
+  host->invoke_bus_ = std::make_unique<InvokeBus>();
   host->webview_host_->set_transparent_background(options.borderless);
   host->webview_host_->set_message_handler([host_ptr = host.get()](std::string_view message) {
     auto parsed = nlohmann::json::parse(message, nullptr, false);
@@ -111,10 +178,15 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
       return;
     }
     auto kind_it = parsed.find("kind");
+    auto name_it = parsed.find("name");
+    auto payload_it = parsed.find("payload");
+    auto request_id_it = parsed.find("requestId");
     if (kind_it == parsed.end() || !kind_it->is_string()) {
       return;
     }
     std::string kind = *kind_it;
+    std::string name = (name_it != parsed.end() && name_it->is_string()) ? std::string(*name_it) : std::string();
+    Json payload = (payload_it != parsed.end()) ? *payload_it : Json::object();
     if (kind == "close") {
       (void)host_ptr->close();
       return;
@@ -122,6 +194,33 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
     if (kind == "drag") {
       ReleaseCapture();
       SendMessageW(host_ptr->hwnd_, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+      return;
+    }
+    if (kind == "subscribe") {
+      host_ptr->subscribed_events_.insert(name);
+      return;
+    }
+    if (kind == "unsubscribe") {
+      host_ptr->subscribed_events_.erase(name);
+      return;
+    }
+    if (kind == "invoke") {
+      auto result = host_ptr->invoke_bus_->dispatch(name, payload);
+      Json message_out{{"kind", "invoke_result"}, {"name", name}, {"ok", static_cast<bool>(result)}, {"payload", result ? *result : Json::object()}};
+      if (request_id_it != parsed.end() && request_id_it->is_number_unsigned()) {
+        message_out["requestId"] = *request_id_it;
+      }
+      if (!result) {
+        message_out["error"] = Json{{"code", result.error().code}, {"message", result.error().message}};
+      }
+      (void)host_ptr->webview_host_->post_json_message(message_out.dump());
+      return;
+    }
+    if (kind == "emit") {
+      if (host_ptr->subscribed_events_.count(name)) {
+        Json message_out{{"kind", "native_event"}, {"name", name}, {"payload", payload}};
+        (void)host_ptr->webview_host_->post_json_message(message_out.dump());
+      }
     }
   });
 
@@ -166,7 +265,9 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
   }
 
   if (options.borderless) {
-    (void)host->webview_host_->add_init_script(kWinBorderlessBridge);
+    (void)host->webview_host_->add_init_script(kWindowsBridgeBootstrap);
+  } else {
+    (void)host->webview_host_->add_init_script(kWindowsBridgeBootstrap);
   }
 
   if (options.asset_root.has_value() && !options.asset_root->empty()) {
@@ -338,18 +439,31 @@ Result<void> Win32WindowHost::evaluate_script(std::string_view script) {
   if (!webview_host_) return tl::unexpected(unsupported_webview_error());
   return webview_host_->evaluate_script(script);
 }
-Result<void> Win32WindowHost::add_init_script(std::string_view) { return tl::unexpected(unsupported_webview_error()); }
+Result<void> Win32WindowHost::add_init_script(std::string_view script) {
+  if (!webview_host_) return tl::unexpected(unsupported_webview_error());
+  return webview_host_->add_init_script(script);
+}
 Result<void> Win32WindowHost::open_devtools() { return tl::unexpected(unsupported_webview_error()); }
 Result<void> Win32WindowHost::close_devtools() { return tl::unexpected(unsupported_webview_error()); }
 Result<void> Win32WindowHost::on_page_load(PageLoadHandler) { return tl::unexpected(unsupported_webview_error()); }
 Result<void> Win32WindowHost::set_navigation_handler(NavigationHandler) { return tl::unexpected(unsupported_webview_error()); }
-Result<void> Win32WindowHost::register_command(std::string, CommandHandler) { return tl::unexpected(Error{"unsupported_by_backend", "windows bridge backend not implemented yet"}); }
-Result<void> Win32WindowHost::emit(std::string, const Json&) { return tl::unexpected(Error{"bridge_unavailable", "windows bridge backend not implemented yet"}); }
+Result<void> Win32WindowHost::register_command(std::string name, CommandHandler handler) {
+  return invoke_bus_->register_command(std::move(name), std::move(handler));
+}
+Result<void> Win32WindowHost::emit(std::string name, const Json& payload) {
+  if (!subscribed_events_.count(name)) {
+    return {};
+  }
+  Json message{{"kind", "native_event"}, {"name", name}, {"payload", payload}};
+  return webview_host_->post_json_message(message.dump());
+}
 
 Result<Capabilities> Win32WindowHost::capabilities() const {
   Capabilities caps;
   caps.window.borderless = true;
   caps.window.always_on_top = true;
+  caps.bridge.invoke = true;
+  caps.bridge.native_events = true;
   return caps;
 }
 

@@ -25,6 +25,7 @@ public:
   Result<void> evaluate_script(std::string_view script);
   Result<void> add_init_script(std::string_view script);
   Result<void> set_message_handler(std::function<void(std::string_view)> handler);
+  Result<void> post_json_message(std::string_view raw_message);
   void set_transparent_background(bool enabled) { transparent_background_ = enabled; }
 
 private:
