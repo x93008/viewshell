@@ -15,6 +15,7 @@ if(WIN32)
   target_sources(viewshell PRIVATE
     runtime/win32_backend_runtime.cpp
     host/windows/win32_window_host.cpp
+    webview/win32_webview_host.cpp
   )
 else()
   target_sources(viewshell PRIVATE

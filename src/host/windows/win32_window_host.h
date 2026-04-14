@@ -9,6 +9,8 @@
 
 #include "runtime/window_host.h"
 
+namespace viewshell { class Win32WebviewHost; }
+
 namespace viewshell {
 
 struct RuntimeAppState;
@@ -60,9 +62,11 @@ private:
   static LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
   Result<void> ensure_window() const;
   void update_style();
+  RECT client_rect() const;
 
   std::weak_ptr<RuntimeAppState> app_state_;
   std::weak_ptr<RuntimeWindowState> window_state_;
+  std::unique_ptr<Win32WebviewHost> webview_host_;
   HWND hwnd_ = nullptr;
   bool borderless_ = false;
   bool always_on_top_ = false;

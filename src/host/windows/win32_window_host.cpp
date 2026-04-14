@@ -4,6 +4,7 @@
 
 #include <string>
 
+#include "webview/win32_webview_host.h"
 #include "viewshell/runtime_state.h"
 
 namespace viewshell {
@@ -68,6 +69,11 @@ LRESULT CALLBACK Win32WindowHost::WindowProc(HWND hwnd, UINT message, WPARAM wpa
     return 0;
   }
 
+  if (message == WM_SIZE && self->webview_host_) {
+    auto rect = self->client_rect();
+    (void)self->webview_host_->set_bounds(rect);
+  }
+
   return DefWindowProcW(hwnd, message, wparam, lparam);
 }
 
@@ -82,6 +88,7 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
   host->position_ = {options.x.value_or(CW_USEDEFAULT), options.y.value_or(CW_USEDEFAULT)};
   host->borderless_ = options.borderless;
   host->always_on_top_ = options.always_on_top;
+  host->webview_host_ = std::make_unique<Win32WebviewHost>();
 
   const wchar_t* class_name = L"ViewshellWindow";
   WNDCLASSW wc{};
@@ -116,6 +123,12 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
 
   ShowWindow(host->hwnd_, SW_SHOW);
   UpdateWindow(host->hwnd_);
+
+  auto attach_result = host->webview_host_->attach(host->hwnd_, options);
+  if (!attach_result) {
+    return tl::unexpected(attach_result.error());
+  }
+
   return host;
 }
 
@@ -144,6 +157,14 @@ void Win32WindowHost::update_style() {
   SetWindowPos(hwnd_, always_on_top_ ? HWND_TOPMOST : HWND_NOTOPMOST,
       0, 0, 0, 0,
       SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+}
+
+RECT Win32WindowHost::client_rect() const {
+  RECT rect{};
+  if (hwnd_) {
+    GetClientRect(hwnd_, &rect);
+  }
+  return rect;
 }
 
 Result<void> Win32WindowHost::set_title(std::string_view title) {
@@ -242,10 +263,16 @@ Result<void> Win32WindowHost::close() {
   return {};
 }
 
-Result<void> Win32WindowHost::load_url(std::string_view) { return tl::unexpected(unsupported_webview_error()); }
+Result<void> Win32WindowHost::load_url(std::string_view url) {
+  if (!webview_host_) return tl::unexpected(unsupported_webview_error());
+  return webview_host_->load_url(url);
+}
 Result<void> Win32WindowHost::load_file(std::string_view) { return tl::unexpected(unsupported_webview_error()); }
 Result<void> Win32WindowHost::reload() { return tl::unexpected(unsupported_webview_error()); }
-Result<void> Win32WindowHost::evaluate_script(std::string_view) { return tl::unexpected(unsupported_webview_error()); }
+Result<void> Win32WindowHost::evaluate_script(std::string_view script) {
+  if (!webview_host_) return tl::unexpected(unsupported_webview_error());
+  return webview_host_->evaluate_script(script);
+}
 Result<void> Win32WindowHost::add_init_script(std::string_view) { return tl::unexpected(unsupported_webview_error()); }
 Result<void> Win32WindowHost::open_devtools() { return tl::unexpected(unsupported_webview_error()); }
 Result<void> Win32WindowHost::close_devtools() { return tl::unexpected(unsupported_webview_error()); }
