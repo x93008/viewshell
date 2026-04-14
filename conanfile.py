@@ -13,7 +13,7 @@ class ViewshellConan(ConanFile):
         self.requires("tl-expected/1.1.0")
         self.requires("gtest/1.14.0")
         if self.settings.os == "Windows":
-            self.requires("webview2-sdk/1.0")
+            self.requires("webview2-sdk/1.0.3912.50")
 
     def layout(self):
         cmake_layout(self)
