@@ -16,6 +16,7 @@ if(WIN32)
     runtime/win32_backend_runtime.cpp
     host/windows/win32_window_host.cpp
     webview/win32_webview_host.cpp
+    bridge/invoke_bus.cpp
   )
 else()
   target_sources(viewshell PRIVATE
