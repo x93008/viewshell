@@ -20,6 +20,7 @@ public:
   Result<void> attach(HWND hwnd, const WindowOptions& options);
   Result<void> set_bounds(RECT bounds);
   Result<void> load_url(std::string_view url);
+  Result<void> load_file(std::string_view path);
   Result<void> evaluate_script(std::string_view script);
 
 private:

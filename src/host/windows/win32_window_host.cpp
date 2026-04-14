@@ -267,7 +267,10 @@ Result<void> Win32WindowHost::load_url(std::string_view url) {
   if (!webview_host_) return tl::unexpected(unsupported_webview_error());
   return webview_host_->load_url(url);
 }
-Result<void> Win32WindowHost::load_file(std::string_view) { return tl::unexpected(unsupported_webview_error()); }
+Result<void> Win32WindowHost::load_file(std::string_view path) {
+  if (!webview_host_) return tl::unexpected(unsupported_webview_error());
+  return webview_host_->load_file(path);
+}
 Result<void> Win32WindowHost::reload() { return tl::unexpected(unsupported_webview_error()); }
 Result<void> Win32WindowHost::evaluate_script(std::string_view script) {
   if (!webview_host_) return tl::unexpected(unsupported_webview_error());
