@@ -1,0 +1,30 @@
+CMakeLists.txt
+  09b0d74280706126 9-13,19-21
+src/webview/win32_webview_host.h
+  09b0d74280706126 7-8,10,29,33
+cmake/ViewshellDeps.cmake
+  09b0d74280706126 3-5,7-16,18-34
+src/webview/win32_webview_host.cpp
+  09b0d74280706126 7-9,30-32,79,83-85,90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "c545978c57c6cb353c580902e8756c00a964ae82",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 56,
+      "total_deletions": 20,
+      "accepted_lines": 56,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/6c908e23ca4a3b1ecd5b9729815df01616320e98e6cc6af309451556fff052e6"
+    }
+  }
+}
