@@ -241,7 +241,7 @@ Result<void> Win32WebviewHost::set_message_handler(std::function<void(std::strin
 Result<void> Win32WebviewHost::post_json_message(std::string_view raw_message) {
   if (auto result = ensure_ready(); !result) return result;
   auto wide = to_wstring(raw_message);
-  HRESULT hr = webview_->PostWebMessageAsString(wide.c_str());
+  HRESULT hr = webview_->PostWebMessageAsJson(wide.c_str());
   if (FAILED(hr)) {
     return tl::unexpected(Error{"invalid_state",
         "failed to post WebView2 web message: " + format_hresult(hr)});
