@@ -1,0 +1,24 @@
+src/host/windows/win32_window_host.cpp
+  09b0d74280706126 132-138
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.1",
+  "base_commit_sha": "d3f0ed178e65139da8e2b7d1f26c502b500611f0",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 7,
+      "total_deletions": 0,
+      "accepted_lines": 7,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/8c400f7a358282b7af3fda2fa66635a0be64963a1b5083b55e5cb6014b73334d"
+    }
+  }
+}
