@@ -2,6 +2,7 @@
 
 #include "win32_window_host.h"
 
+#include <nlohmann/json.hpp>
 #include <string>
 
 #include "webview/win32_webview_host.h"
@@ -24,6 +25,19 @@ std::wstring to_wstring(std::string_view value) {
 Error unsupported_webview_error() {
   return Error{"unsupported_by_backend", "windows webview backend not implemented yet"};
 }
+
+constexpr const char* kWinBorderlessBridge = R"JS((function () {
+  if (!window.chrome || !window.chrome.webview) return;
+  window.webkit = window.webkit || { messageHandlers: {} };
+  window.webkit.messageHandlers.viewshellDrag = {
+    postMessage: function (payload) {
+      window.chrome.webview.postMessage(JSON.stringify({ kind: 'drag', payload: payload || 'drag' }));
+    }
+  };
+  window.__viewshellWinClose = function () {
+    window.chrome.webview.postMessage(JSON.stringify({ kind: 'close' }));
+  };
+})();)JS";
 
 } // namespace
 
@@ -72,6 +86,7 @@ LRESULT CALLBACK Win32WindowHost::WindowProc(HWND hwnd, UINT message, WPARAM wpa
   if (message == WM_SIZE && self->webview_host_) {
     auto rect = self->client_rect();
     (void)self->webview_host_->set_bounds(rect);
+    self->update_shape();
   }
 
   return DefWindowProcW(hwnd, message, wparam, lparam);
@@ -89,6 +104,26 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
   host->borderless_ = options.borderless;
   host->always_on_top_ = options.always_on_top;
   host->webview_host_ = std::make_unique<Win32WebviewHost>();
+  host->webview_host_->set_transparent_background(options.borderless);
+  host->webview_host_->set_message_handler([host_ptr = host.get()](std::string_view message) {
+    auto parsed = nlohmann::json::parse(message, nullptr, false);
+    if (parsed.is_discarded() || !parsed.is_object()) {
+      return;
+    }
+    auto kind_it = parsed.find("kind");
+    if (kind_it == parsed.end() || !kind_it->is_string()) {
+      return;
+    }
+    std::string kind = *kind_it;
+    if (kind == "close") {
+      (void)host_ptr->close();
+      return;
+    }
+    if (kind == "drag") {
+      ReleaseCapture();
+      SendMessageW(host_ptr->hwnd_, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+    }
+  });
 
   const wchar_t* class_name = L"ViewshellWindow";
   WNDCLASSW wc{};
@@ -123,10 +158,15 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
 
   ShowWindow(host->hwnd_, SW_SHOW);
   UpdateWindow(host->hwnd_);
+  host->update_shape();
 
   auto attach_result = host->webview_host_->attach(host->hwnd_, options);
   if (!attach_result) {
     return tl::unexpected(attach_result.error());
+  }
+
+  if (options.borderless) {
+    (void)host->webview_host_->add_init_script(kWinBorderlessBridge);
   }
 
   if (options.asset_root.has_value() && !options.asset_root->empty()) {
@@ -164,6 +204,21 @@ void Win32WindowHost::update_style() {
   SetWindowPos(hwnd_, always_on_top_ ? HWND_TOPMOST : HWND_NOTOPMOST,
       0, 0, 0, 0,
       SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+}
+
+void Win32WindowHost::update_shape() {
+  if (!hwnd_ || !borderless_) {
+    return;
+  }
+  RECT rect{};
+  GetClientRect(hwnd_, &rect);
+  auto width = rect.right - rect.left;
+  auto height = rect.bottom - rect.top;
+  if (width <= 0 || height <= 0) {
+    return;
+  }
+  HRGN region = CreateEllipticRgn(0, 0, width, height);
+  SetWindowRgn(hwnd_, region, TRUE);
 }
 
 RECT Win32WindowHost::client_rect() const {

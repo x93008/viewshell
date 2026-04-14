@@ -9,6 +9,8 @@
 #include <atomic>
 #include <string>
 
+#include <shlobj.h>
+
 namespace viewshell {
 
 namespace {
@@ -27,6 +29,21 @@ std::wstring to_file_url(std::string_view path) {
   auto absolute = std::filesystem::absolute(std::filesystem::path(std::string(path)));
   auto generic = absolute.generic_u8string();
   return to_wstring("file:///" + generic);
+}
+
+std::wstring webview2_user_data_dir(HWND hwnd) {
+  PWSTR local_app_data = nullptr;
+  std::wstring result;
+  if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &local_app_data))) {
+    wchar_t exe_path[MAX_PATH];
+    GetModuleFileNameW(nullptr, exe_path, MAX_PATH);
+    std::filesystem::path exe(exe_path);
+    auto dir = std::filesystem::path(local_app_data) / L"Viewshell" / exe.stem() / L"WebView2";
+    std::filesystem::create_directories(dir);
+    result = dir.wstring();
+    CoTaskMemFree(local_app_data);
+  }
+  return result;
 }
 
 void pump_pending_messages() {
@@ -64,8 +81,9 @@ Result<void> Win32WebviewHost::attach(HWND hwnd, const WindowOptions&) {
 
   std::atomic<bool> env_done = false;
   HRESULT env_result = E_FAIL;
+  auto user_data = webview2_user_data_dir(hwnd_);
   hr = CreateCoreWebView2EnvironmentWithOptions(
-      nullptr, nullptr, nullptr,
+      nullptr, user_data.empty() ? nullptr : user_data.c_str(), nullptr,
       Microsoft::WRL::Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(
           [this, &env_done, &env_result](HRESULT result, ICoreWebView2Environment* env) -> HRESULT {
             if (SUCCEEDED(result) && env) {
@@ -120,6 +138,41 @@ Result<void> Win32WebviewHost::attach(HWND hwnd, const WindowOptions&) {
   RECT bounds{};
   GetClientRect(hwnd_, &bounds);
   controller_->put_Bounds(bounds);
+
+  if (transparent_background_) {
+    Microsoft::WRL::ComPtr<ICoreWebView2Controller2> controller2;
+    if (SUCCEEDED(controller_.As(&controller2)) && controller2) {
+      COREWEBVIEW2_COLOR color{};
+      color.A = 0;
+      color.R = 0;
+      color.G = 0;
+      color.B = 0;
+      controller2->put_DefaultBackgroundColor(color);
+    }
+  }
+
+  if (message_handler_) {
+    webview_->add_WebMessageReceived(
+        Microsoft::WRL::Callback<ICoreWebView2WebMessageReceivedEventHandler>(
+            [this](ICoreWebView2*, ICoreWebView2WebMessageReceivedEventArgs* args) -> HRESULT {
+              LPWSTR message = nullptr;
+              if (FAILED(args->TryGetWebMessageAsString(&message)) || !message) {
+                return S_OK;
+              }
+              int size = WideCharToMultiByte(CP_UTF8, 0, message, -1, nullptr, 0, nullptr, nullptr);
+              std::string utf8(size > 0 ? size - 1 : 0, '\0');
+              if (size > 1) {
+                WideCharToMultiByte(CP_UTF8, 0, message, -1, utf8.data(), size - 1, nullptr, nullptr);
+              }
+              CoTaskMemFree(message);
+              if (message_handler_) {
+                message_handler_(utf8);
+              }
+              return S_OK;
+            }).Get(),
+        nullptr);
+  }
+
   return {};
 }
 
@@ -166,6 +219,22 @@ Result<void> Win32WebviewHost::evaluate_script(std::string_view script) {
     return tl::unexpected(Error{"invalid_state",
         "failed to execute script in WebView2: " + format_hresult(hr)});
   }
+  return {};
+}
+
+Result<void> Win32WebviewHost::add_init_script(std::string_view script) {
+  if (auto result = ensure_ready(); !result) return result;
+  auto wide = to_wstring(script);
+  HRESULT hr = webview_->AddScriptToExecuteOnDocumentCreated(wide.c_str(), nullptr);
+  if (FAILED(hr)) {
+    return tl::unexpected(Error{"invalid_state",
+        "failed to add init script in WebView2: " + format_hresult(hr)});
+  }
+  return {};
+}
+
+Result<void> Win32WebviewHost::set_message_handler(std::function<void(std::string_view)> handler) {
+  message_handler_ = std::move(handler);
   return {};
 }
 

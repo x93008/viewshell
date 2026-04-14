@@ -4,6 +4,7 @@
 
 #include <windows.h>
 #include <string_view>
+#include <functional>
 
 #include <wrl.h>
 #include <WebView2.h>
@@ -22,6 +23,9 @@ public:
   Result<void> load_url(std::string_view url);
   Result<void> load_file(std::string_view path);
   Result<void> evaluate_script(std::string_view script);
+  Result<void> add_init_script(std::string_view script);
+  Result<void> set_message_handler(std::function<void(std::string_view)> handler);
+  void set_transparent_background(bool enabled) { transparent_background_ = enabled; }
 
 private:
   Result<void> ensure_ready() const;
@@ -32,6 +36,8 @@ private:
   Microsoft::WRL::ComPtr<ICoreWebView2Controller> controller_;
   Microsoft::WRL::ComPtr<ICoreWebView2> webview_;
   bool com_initialized_ = false;
+  bool transparent_background_ = false;
+  std::function<void(std::string_view)> message_handler_;
 };
 
 } // namespace viewshell

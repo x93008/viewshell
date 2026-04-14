@@ -5,7 +5,7 @@ if(WIN32)
   target_link_libraries(viewshell PRIVATE webview2-sdk::webview2-sdk)
   target_compile_definitions(viewshell PRIVATE VIEWSHELL_HAS_WEBVIEW2=1)
 
-  target_link_libraries(viewshell PRIVATE ole32 user32)
+  target_link_libraries(viewshell PRIVATE ole32 user32 shell32)
 else()
   pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
   pkg_check_modules(X11 REQUIRED x11)
