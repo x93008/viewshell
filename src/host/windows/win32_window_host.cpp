@@ -129,6 +129,13 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
     return tl::unexpected(attach_result.error());
   }
 
+  if (options.asset_root.has_value() && !options.asset_root->empty()) {
+    auto load_result = host->webview_host_->load_file(*options.asset_root);
+    if (!load_result) {
+      return tl::unexpected(load_result.error());
+    }
+  }
+
   return host;
 }
 
