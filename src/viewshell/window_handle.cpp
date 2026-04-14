@@ -5,9 +5,6 @@
 
 namespace viewshell {
 
-WindowHandle::WindowHandle(std::shared_ptr<RuntimeWindowState> state)
-    : state_(std::move(state)) {}
-
 Result<BridgeHandle> WindowHandle::bridge() {
   if (state_->is_closed) {
     return tl::unexpected(Error{"window_closed", "window is closed"});
