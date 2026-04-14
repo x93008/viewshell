@@ -1,17 +1,9 @@
 target_link_libraries(viewshell PUBLIC nlohmann_json::nlohmann_json tl::expected)
 
 if(WIN32)
-  find_path(WEBVIEW2_INCLUDE_DIR WebView2.h)
-  find_library(WEBVIEW2_LIBRARY NAMES WebView2LoaderStatic WebView2Loader)
-
-  if(WEBVIEW2_INCLUDE_DIR AND WEBVIEW2_LIBRARY)
-    target_include_directories(viewshell PRIVATE ${WEBVIEW2_INCLUDE_DIR})
-    target_link_libraries(viewshell PRIVATE ${WEBVIEW2_LIBRARY})
-    target_compile_definitions(viewshell PRIVATE VIEWSHELL_HAS_WEBVIEW2=1)
-  else()
-    message(STATUS "WebView2 SDK not found; Windows webview support will be disabled")
-    target_compile_definitions(viewshell PRIVATE VIEWSHELL_HAS_WEBVIEW2=0)
-  endif()
+  find_package(webview2-sdk CONFIG REQUIRED)
+  target_link_libraries(viewshell PRIVATE webview2-sdk::webview2-sdk)
+  target_compile_definitions(viewshell PRIVATE VIEWSHELL_HAS_WEBVIEW2=1)
 
   target_link_libraries(viewshell PRIVATE ole32 user32)
 else()

@@ -3,11 +3,8 @@
 #include "webview/win32_webview_host.h"
 
 #include <windows.h>
-#include <string>
-
-#if VIEWSHELL_HAS_WEBVIEW2
 #include <future>
-#endif
+#include <string>
 
 namespace viewshell {
 
@@ -27,10 +24,6 @@ std::wstring to_wstring(std::string_view value) {
 
 Result<void> Win32WebviewHost::attach(HWND hwnd, const WindowOptions&) {
   hwnd_ = hwnd;
-
-#if !VIEWSHELL_HAS_WEBVIEW2
-  return tl::unexpected(Error{"unsupported_by_backend", "WebView2 SDK not available at build time"});
-#else
 
   std::promise<HRESULT> env_promise;
   auto env_future = env_promise.get_future();
@@ -77,36 +70,22 @@ Result<void> Win32WebviewHost::attach(HWND hwnd, const WindowOptions&) {
   GetClientRect(hwnd_, &bounds);
   controller_->put_Bounds(bounds);
   return {};
-#endif
 }
 
 Result<void> Win32WebviewHost::ensure_ready() const {
-#if !VIEWSHELL_HAS_WEBVIEW2
-  return tl::unexpected(Error{"unsupported_by_backend", "WebView2 SDK not available at build time"});
-#else
   if (!controller_ || !webview_) {
     return tl::unexpected(Error{"unsupported_by_backend", "windows webview backend not initialized"});
   }
   return {};
-#endif
 }
 
 Result<void> Win32WebviewHost::set_bounds(RECT bounds) {
-#if !VIEWSHELL_HAS_WEBVIEW2
-  (void)bounds;
-  return tl::unexpected(Error{"unsupported_by_backend", "WebView2 SDK not available at build time"});
-#else
   if (auto result = ensure_ready(); !result) return result;
   controller_->put_Bounds(bounds);
   return {};
-#endif
 }
 
 Result<void> Win32WebviewHost::load_url(std::string_view url) {
-#if !VIEWSHELL_HAS_WEBVIEW2
-  (void)url;
-  return tl::unexpected(Error{"unsupported_by_backend", "WebView2 SDK not available at build time"});
-#else
   if (auto result = ensure_ready(); !result) return result;
   auto wide = to_wstring(url);
   HRESULT hr = webview_->Navigate(wide.c_str());
@@ -114,14 +93,9 @@ Result<void> Win32WebviewHost::load_url(std::string_view url) {
     return tl::unexpected(Error{"invalid_state", "failed to navigate WebView2"});
   }
   return {};
-#endif
 }
 
 Result<void> Win32WebviewHost::evaluate_script(std::string_view script) {
-#if !VIEWSHELL_HAS_WEBVIEW2
-  (void)script;
-  return tl::unexpected(Error{"unsupported_by_backend", "WebView2 SDK not available at build time"});
-#else
   if (auto result = ensure_ready(); !result) return result;
   auto wide = to_wstring(script);
   HRESULT hr = webview_->ExecuteScript(wide.c_str(), nullptr);
@@ -129,7 +103,6 @@ Result<void> Win32WebviewHost::evaluate_script(std::string_view script) {
     return tl::unexpected(Error{"invalid_state", "failed to execute script in WebView2"});
   }
   return {};
-#endif
 }
 
 } // namespace viewshell
