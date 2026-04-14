@@ -1,0 +1,24 @@
+src/webview/win32_webview_host.cpp
+  09b0d74280706126 244
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.1",
+  "base_commit_sha": "3661783e90aa6248441fbf785ff1d920fbe99d1f",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/8754960a0d15f896f8eb45ac59e6e618ca7ea44703900ca17643554a765b4763"
+    }
+  }
+}
