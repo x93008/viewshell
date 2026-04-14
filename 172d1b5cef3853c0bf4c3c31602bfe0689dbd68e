@@ -1,0 +1,28 @@
+conanfile.py
+  09b0d74280706126 1-19
+cmake/ViewshellDeps.cmake
+  09b0d74280706126 4-6
+src/webview/win32_webview_host.cpp
+  09b0d74280706126 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "172d1b5cef3853c0bf4c3c31602bfe0689dbd68e",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 24,
+      "total_deletions": 55,
+      "accepted_lines": 23,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/86e68129eda5283d79a9294709b337ab30e61d34a0e58549f992a9ab4f27dc44"
+    }
+  }
+}
