@@ -2,8 +2,11 @@
 
 #include "webview/win32_webview_host.h"
 
-#include <future>
 #include <string>
+
+#if VIEWSHELL_HAS_WEBVIEW2
+#include <future>
+#endif
 
 namespace viewshell {
 
@@ -23,6 +26,10 @@ std::wstring to_wstring(std::string_view value) {
 
 Result<void> Win32WebviewHost::attach(HWND hwnd, const WindowOptions&) {
   hwnd_ = hwnd;
+
+#if !VIEWSHELL_HAS_WEBVIEW2
+  return tl::unexpected(Error{"unsupported_by_backend", "WebView2 SDK not available at build time"});
+#else
 
   std::promise<HRESULT> env_promise;
   auto env_future = env_promise.get_future();
@@ -69,13 +76,18 @@ Result<void> Win32WebviewHost::attach(HWND hwnd, const WindowOptions&) {
   GetClientRect(hwnd_, &bounds);
   controller_->put_Bounds(bounds);
   return {};
+#endif
 }
 
 Result<void> Win32WebviewHost::ensure_ready() const {
+#if !VIEWSHELL_HAS_WEBVIEW2
+  return tl::unexpected(Error{"unsupported_by_backend", "WebView2 SDK not available at build time"});
+#else
   if (!controller_ || !webview_) {
     return tl::unexpected(Error{"unsupported_by_backend", "windows webview backend not initialized"});
   }
   return {};
+#endif
 }
 
 Result<void> Win32WebviewHost::set_bounds(RECT bounds) {
