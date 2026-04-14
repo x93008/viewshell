@@ -3,6 +3,8 @@
 #include "webview/win32_webview_host.h"
 
 #include <windows.h>
+#include <objbase.h>
+#include <sstream>
 #include <future>
 #include <string>
 
@@ -22,12 +24,32 @@ std::wstring to_wstring(std::string_view value) {
 
 } // namespace
 
+Win32WebviewHost::~Win32WebviewHost() {
+  if (com_initialized_) {
+    CoUninitialize();
+  }
+}
+
+std::string Win32WebviewHost::format_hresult(HRESULT hr) {
+  std::ostringstream out;
+  out << "HRESULT=0x" << std::hex << static_cast<unsigned long>(hr);
+  return out.str();
+}
+
 Result<void> Win32WebviewHost::attach(HWND hwnd, const WindowOptions&) {
   hwnd_ = hwnd;
 
+  HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+  if (SUCCEEDED(hr)) {
+    com_initialized_ = true;
+  } else if (hr != RPC_E_CHANGED_MODE) {
+    return tl::unexpected(Error{"engine_init_failed",
+        "failed to initialize COM for WebView2: " + format_hresult(hr)});
+  }
+
   std::promise<HRESULT> env_promise;
   auto env_future = env_promise.get_future();
-  HRESULT hr = CreateCoreWebView2EnvironmentWithOptions(
+  hr = CreateCoreWebView2EnvironmentWithOptions(
       nullptr, nullptr, nullptr,
       Microsoft::WRL::Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(
           [this, &env_promise](HRESULT result, ICoreWebView2Environment* env) -> HRESULT {
@@ -38,11 +60,13 @@ Result<void> Win32WebviewHost::attach(HWND hwnd, const WindowOptions&) {
             return S_OK;
           }).Get());
   if (FAILED(hr)) {
-    return tl::unexpected(Error{"engine_init_failed", "failed to create WebView2 environment"});
+    return tl::unexpected(Error{"engine_init_failed",
+        "failed to create WebView2 environment: " + format_hresult(hr)});
   }
   hr = env_future.get();
   if (FAILED(hr) || !environment_) {
-    return tl::unexpected(Error{"engine_init_failed", "failed to initialize WebView2 environment"});
+    return tl::unexpected(Error{"engine_init_failed",
+        "failed to initialize WebView2 environment: " + format_hresult(hr)});
   }
 
   std::promise<HRESULT> controller_promise;
@@ -59,11 +83,13 @@ Result<void> Win32WebviewHost::attach(HWND hwnd, const WindowOptions&) {
             return S_OK;
           }).Get());
   if (FAILED(hr)) {
-    return tl::unexpected(Error{"engine_init_failed", "failed to create WebView2 controller"});
+    return tl::unexpected(Error{"engine_init_failed",
+        "failed to create WebView2 controller: " + format_hresult(hr)});
   }
   hr = controller_future.get();
   if (FAILED(hr) || !controller_ || !webview_) {
-    return tl::unexpected(Error{"engine_init_failed", "failed to initialize WebView2 controller"});
+    return tl::unexpected(Error{"engine_init_failed",
+        "failed to initialize WebView2 controller: " + format_hresult(hr)});
   }
 
   RECT bounds{};
@@ -90,7 +116,8 @@ Result<void> Win32WebviewHost::load_url(std::string_view url) {
   auto wide = to_wstring(url);
   HRESULT hr = webview_->Navigate(wide.c_str());
   if (FAILED(hr)) {
-    return tl::unexpected(Error{"invalid_state", "failed to navigate WebView2"});
+    return tl::unexpected(Error{"invalid_state",
+        "failed to navigate WebView2: " + format_hresult(hr)});
   }
   return {};
 }
@@ -100,7 +127,8 @@ Result<void> Win32WebviewHost::evaluate_script(std::string_view script) {
   auto wide = to_wstring(script);
   HRESULT hr = webview_->ExecuteScript(wide.c_str(), nullptr);
   if (FAILED(hr)) {
-    return tl::unexpected(Error{"invalid_state", "failed to execute script in WebView2"});
+    return tl::unexpected(Error{"invalid_state",
+        "failed to execute script in WebView2: " + format_hresult(hr)});
   }
   return {};
 }

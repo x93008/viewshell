@@ -15,6 +15,7 @@ namespace viewshell {
 class Win32WebviewHost {
 public:
   Win32WebviewHost() = default;
+  ~Win32WebviewHost();
 
   Result<void> attach(HWND hwnd, const WindowOptions& options);
   Result<void> set_bounds(RECT bounds);
@@ -23,11 +24,13 @@ public:
 
 private:
   Result<void> ensure_ready() const;
+  static std::string format_hresult(HRESULT hr);
 
   HWND hwnd_ = nullptr;
   Microsoft::WRL::ComPtr<ICoreWebView2Environment> environment_;
   Microsoft::WRL::ComPtr<ICoreWebView2Controller> controller_;
   Microsoft::WRL::ComPtr<ICoreWebView2> webview_;
+  bool com_initialized_ = false;
 };
 
 } // namespace viewshell
