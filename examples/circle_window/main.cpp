@@ -7,6 +7,9 @@ int main(int argc, char* argv[]) {
   std::string exe_arg(argv[0]);
   auto exe_dir = std::filesystem::canonical(std::filesystem::path(exe_arg)).parent_path();
   auto asset_path = exe_dir / "app" / "index.html";
+  if (!std::filesystem::exists(asset_path)) {
+    asset_path = exe_dir.parent_path() / "app" / "index.html";
+  }
 
   auto app = viewshell::Application::create(viewshell::AppOptions{});
   if (!app) {
