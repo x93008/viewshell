@@ -157,6 +157,10 @@ MacOSWindowHost::~MacOSWindowHost() {
   if (message_handler) {
     [message_handler release];
   }
+  WKUserContentController* user_content = (WKUserContentController*)user_content_controller_;
+  if (user_content) {
+    [user_content release];
+  }
 }
 
 Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
@@ -211,6 +215,7 @@ Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
   host->delegate_ = (void*)[delegate retain];
   host->webview_ = (void*)[webview retain];
   host->message_handler_ = (void*)[message_handler retain];
+  host->user_content_controller_ = (void*)[user_content retain];
 
   if (options.asset_root.has_value() && !options.asset_root->empty()) {
     auto load_result = host->load_file(*options.asset_root);
@@ -343,7 +348,24 @@ Result<void> MacOSWindowHost::evaluate_script(std::string_view script) {
   return {};
 }
 
-Result<void> MacOSWindowHost::add_init_script(std::string_view) { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
+Result<void> MacOSWindowHost::add_init_script(std::string_view script) {
+  init_scripts_.push_back(std::string(script));
+
+  WKUserContentController* user_content = (WKUserContentController*)user_content_controller_;
+  if (user_content) {
+    WKUserScript* user_script = [[WKUserScript alloc] initWithSource:to_nsstring(script)
+        injectionTime:WKUserScriptInjectionTimeAtDocumentStart
+        forMainFrameOnly:NO];
+    [user_content addUserScript:user_script];
+    [user_script release];
+  }
+
+  if (webview_) {
+    [(WKWebView*)webview_ evaluateJavaScript:to_nsstring(script) completionHandler:nil];
+  }
+
+  return {};
+}
 Result<void> MacOSWindowHost::open_devtools() { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
 Result<void> MacOSWindowHost::close_devtools() { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
 Result<void> MacOSWindowHost::on_page_load(PageLoadHandler) { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }

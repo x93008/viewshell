@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <unordered_set>
+#include <vector>
 
 #include <viewshell/options.h>
 
@@ -70,8 +71,10 @@ private:
   void* delegate_ = nullptr;
   void* webview_ = nullptr;
   void* message_handler_ = nullptr;
+  void* user_content_controller_ = nullptr;
   std::unique_ptr<InvokeBus> invoke_bus_;
   std::unordered_set<std::string> subscribed_events_;
+  std::vector<std::string> init_scripts_;
   bool borderless_ = false;
   bool always_on_top_ = false;
 };
