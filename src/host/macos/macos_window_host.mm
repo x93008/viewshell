@@ -94,6 +94,14 @@ Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
   host->window_ = (void*)[window retain];
   host->delegate_ = (void*)[delegate retain];
   host->webview_ = (void*)[webview retain];
+
+  if (options.asset_root.has_value() && !options.asset_root->empty()) {
+    auto load_result = host->load_file(*options.asset_root);
+    if (!load_result) {
+      return tl::unexpected(load_result.error());
+    }
+  }
+
   return host;
 }
 
