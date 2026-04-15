@@ -29,6 +29,10 @@ namespace viewshell { class MacOSWindowHost; }
 @property(nonatomic, assign) viewshell::MacOSWindowHost* host;
 @end
 
+@interface ViewshellNavigationDelegate : NSObject<WKNavigationDelegate>
+@property(nonatomic, assign) viewshell::MacOSWindowHost* host;
+@end
+
 @implementation ViewshellWindowDelegate
 
 - (BOOL)windowShouldClose:(id)sender {
@@ -48,6 +52,37 @@ namespace viewshell { class MacOSWindowHost; }
   }
   std::string body([(NSString*)message.body UTF8String]);
   self.host->handle_script_message(body);
+}
+
+@end
+
+@implementation ViewshellNavigationDelegate
+
+- (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation {
+  if (!self.host) {
+    return;
+  }
+  NSString* url = webView.URL ? webView.URL.absoluteString : @"";
+  self.host->notify_page_load(std::string([url UTF8String]), "started", std::nullopt);
+}
+
+- (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
+  if (!self.host) {
+    return;
+  }
+  NSString* url = webView.URL ? webView.URL.absoluteString : @"";
+  self.host->notify_page_load(std::string([url UTF8String]), "finished", std::nullopt);
+}
+
+- (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation *)navigation withError:(NSError *)error {
+  if (!self.host) {
+    return;
+  }
+  NSString* url = webView.URL ? webView.URL.absoluteString : @"";
+  self.host->notify_page_load(
+      std::string([url UTF8String]),
+      "finished",
+      error ? std::optional<std::string>(std::to_string((long long)error.code)) : std::optional<std::string>());
 }
 
 @end
@@ -157,6 +192,10 @@ MacOSWindowHost::~MacOSWindowHost() {
   if (message_handler) {
     [message_handler release];
   }
+  ViewshellNavigationDelegate* navigation_delegate = (ViewshellNavigationDelegate*)navigation_delegate_;
+  if (navigation_delegate) {
+    [navigation_delegate release];
+  }
   WKUserContentController* user_content = (WKUserContentController*)user_content_controller_;
   if (user_content) {
     [user_content release];
@@ -194,12 +233,15 @@ Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
   WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
   WKUserContentController* user_content = [[WKUserContentController alloc] init];
   ViewshellWebMessageHandler* message_handler = [[ViewshellWebMessageHandler alloc] init];
+  ViewshellNavigationDelegate* navigation_delegate = [[ViewshellNavigationDelegate alloc] init];
   message_handler.host = host.get();
+  navigation_delegate.host = host.get();
   [user_content addScriptMessageHandler:message_handler name:@"viewshellBridge"];
   WKUserScript* bootstrap = [[WKUserScript alloc] initWithSource:to_nsstring(kMacBridgeBootstrap) injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:NO];
   [user_content addUserScript:bootstrap];
   [configuration setUserContentController:user_content];
   WKWebView* webview = [[WKWebView alloc] initWithFrame:[[window contentView] bounds] configuration:configuration];
+  [webview setNavigationDelegate:navigation_delegate];
   [webview setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
   if (host->borderless_) {
     [window setOpaque:NO];
@@ -215,6 +257,7 @@ Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
   host->delegate_ = (void*)[delegate retain];
   host->webview_ = (void*)[webview retain];
   host->message_handler_ = (void*)[message_handler retain];
+  host->navigation_delegate_ = (void*)[navigation_delegate retain];
   host->user_content_controller_ = (void*)[user_content retain];
 
   if (options.asset_root.has_value() && !options.asset_root->empty()) {
@@ -368,7 +411,10 @@ Result<void> MacOSWindowHost::add_init_script(std::string_view script) {
 }
 Result<void> MacOSWindowHost::open_devtools() { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
 Result<void> MacOSWindowHost::close_devtools() { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
-Result<void> MacOSWindowHost::on_page_load(PageLoadHandler) { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
+Result<void> MacOSWindowHost::on_page_load(PageLoadHandler handler) {
+  page_load_handlers_.push_back(std::move(handler));
+  return {};
+}
 Result<void> MacOSWindowHost::set_navigation_handler(NavigationHandler) { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
 Result<void> MacOSWindowHost::register_command(std::string name, CommandHandler handler) { return invoke_bus_->register_command(std::move(name), std::move(handler)); }
 
@@ -446,6 +492,13 @@ void MacOSWindowHost::handle_script_message(std::string_view message) {
   if (kind == "emit" && subscribed_events_.count(name)) {
     Json message_out{{"kind", "native_event"}, {"name", name}, {"payload", payload}};
     dispatch_json_to_page(message_out);
+  }
+}
+
+void MacOSWindowHost::notify_page_load(std::string url, std::string stage, std::optional<std::string> error_code) {
+  PageLoadEvent event{std::move(url), std::move(stage), std::move(error_code)};
+  for (auto& handler : page_load_handlers_) {
+    handler(event);
   }
 }
 

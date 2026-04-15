@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <unordered_set>
+#include <optional>
 #include <vector>
 
 #include <viewshell/options.h>
@@ -58,6 +59,7 @@ public:
   void handle_script_message(std::string_view message);
   void dispatch_json_to_page(const Json& payload);
   void begin_drag();
+  void notify_page_load(std::string url, std::string stage, std::optional<std::string> error_code);
 
 private:
   MacOSWindowHost(std::shared_ptr<RuntimeAppState> app_state,
@@ -71,10 +73,12 @@ private:
   void* delegate_ = nullptr;
   void* webview_ = nullptr;
   void* message_handler_ = nullptr;
+  void* navigation_delegate_ = nullptr;
   void* user_content_controller_ = nullptr;
   std::unique_ptr<InvokeBus> invoke_bus_;
   std::unordered_set<std::string> subscribed_events_;
   std::vector<std::string> init_scripts_;
+  std::vector<PageLoadHandler> page_load_handlers_;
   bool borderless_ = false;
   bool always_on_top_ = false;
 };
