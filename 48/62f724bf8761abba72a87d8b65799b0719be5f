@@ -1,0 +1,35 @@
+examples/hello_viewshell/CMakeLists.txt
+  09b0d74280706126 1
+examples/circle_window/CMakeLists.txt
+  09b0d74280706126 1
+examples/CMakeLists.txt
+  09b0d74280706126 1-2
+examples/common/example_asset_path.cpp
+  09b0d74280706126 1-76
+examples/common/example_asset_path.h
+  09b0d74280706126 1-9
+examples/hello_viewshell/main.cpp
+  09b0d74280706126 6,9,21
+examples/circle_window/main.cpp
+  09b0d74280706126 5,8,17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.1",
+  "base_commit_sha": "4862f724bf8761abba72a87d8b65799b0719be5f",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 97,
+      "total_deletions": 22,
+      "accepted_lines": 97,
+      "overriden_lines": 0
+    }
+  }
+}
