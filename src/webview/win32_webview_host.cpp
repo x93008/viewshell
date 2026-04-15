@@ -280,6 +280,14 @@ Result<void> Win32WebviewHost::add_init_script(std::string_view script) {
       return tl::unexpected(Error{"invalid_state",
           "failed to add init script in WebView2: " + format_hresult(hr)});
     }
+
+    // If a page is already loaded, mirror the init script into the current document
+    // so callers that register scripts after create_window() can still observe it.
+    hr = webview_->ExecuteScript(wide.c_str(), nullptr);
+    if (FAILED(hr)) {
+      return tl::unexpected(Error{"invalid_state",
+          "failed to execute current-page init script in WebView2: " + format_hresult(hr)});
+    }
   }
   return {};
 }
