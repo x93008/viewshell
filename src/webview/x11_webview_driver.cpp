@@ -89,6 +89,30 @@ static void on_script_message_received(WebKitUserContentManager*,
   g_free(js);
  }
 
+static gboolean on_decide_policy(WebKitWebView*, WebKitPolicyDecision* decision,
+    WebKitPolicyDecisionType type, gpointer user_data) {
+  if (type != WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION) {
+    return FALSE;
+  }
+
+  auto* handler = static_cast<NavigationHandler*>(user_data);
+  if (!handler || !*handler) {
+    return FALSE;
+  }
+
+  auto* navigation = WEBKIT_NAVIGATION_POLICY_DECISION(decision);
+  auto* request = webkit_navigation_policy_decision_get_request(navigation);
+  const char* uri = request ? webkit_uri_request_get_uri(request) : nullptr;
+  NavigationRequest nav_request{uri ? uri : ""};
+
+  if ((*handler)(nav_request) == NavigationDecision::Deny) {
+    webkit_policy_decision_ignore(decision);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 Result<void> WebviewDriver::attach(NativeWindowHandle native,
                                      const WindowOptions& options) {
   if (attached_) return {};
@@ -130,6 +154,9 @@ Result<void> WebviewDriver::attach(NativeWindowHandle native,
 
   g_signal_connect(GTK_WIDGET(webview_), "close",
       G_CALLBACK(on_webview_close), nullptr);
+
+  g_signal_connect(webview_, "decide-policy",
+      G_CALLBACK(on_decide_policy), &navigation_handler_);
 
   capabilities_.window.borderless = options.borderless;
   capabilities_.window.always_on_top = options.always_on_top;

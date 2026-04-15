@@ -455,7 +455,10 @@ Result<void> Win32WindowHost::on_page_load(PageLoadHandler handler) {
   if (!webview_host_) return tl::unexpected(unsupported_webview_error());
   return webview_host_->on_page_load(std::move(handler));
 }
-Result<void> Win32WindowHost::set_navigation_handler(NavigationHandler) { return tl::unexpected(unsupported_webview_error()); }
+Result<void> Win32WindowHost::set_navigation_handler(NavigationHandler handler) {
+  if (!webview_host_) return tl::unexpected(unsupported_webview_error());
+  return webview_host_->set_navigation_handler(std::move(handler));
+}
 Result<void> Win32WindowHost::register_command(std::string name, CommandHandler handler) {
   return invoke_bus_->register_command(std::move(name), std::move(handler));
 }
