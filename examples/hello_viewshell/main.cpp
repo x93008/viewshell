@@ -43,6 +43,14 @@ int main(int argc, char* argv[]) {
   });
 
   auto bridge = win->bridge();
+  win->set_navigation_handler([bridge](const viewshell::NavigationRequest& request) mutable {
+    bool allow = request.url.rfind("file://", 0) == 0 || request.url.rfind("viewshell://app/", 0) == 0;
+    if (bridge) {
+      (void)bridge->emit("navigation-decision", viewshell::Json{{"url", request.url}, {"decision", allow ? "allow" : "deny"}});
+    }
+    return allow ? viewshell::NavigationDecision::Allow : viewshell::NavigationDecision::Deny;
+  });
+
   if (bridge) {
     bridge->register_command("app.ping",
       [](const viewshell::Json& args) -> viewshell::Result<viewshell::Json> {

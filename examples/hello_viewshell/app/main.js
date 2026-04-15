@@ -7,7 +7,9 @@
   var subscribeEventEl = document.getElementById("subscribeEvent");
   var unsubscribeEventEl = document.getElementById("unsubscribeEvent");
   var reloadPageEl = document.getElementById("reloadPage");
+  var navigateDeniedEl = document.getElementById("navigateDenied");
   var unsubscribeNativeReady = null;
+  var unsubscribeNavigationDecision = null;
 
   function writeLine(title, payload) {
     var text = title + "\n" + JSON.stringify(payload, null, 2);
@@ -25,6 +27,10 @@
   writeLine("bridge:ready", { invoke: true, emit: true, on: true, off: true });
   writeLine("init-script", {
     value: window.__viewshellInitScriptRan || "missing"
+  });
+
+  unsubscribeNavigationDecision = bridge.on("navigation-decision", function (payload) {
+    writeLine("navigation handler", payload);
   });
 
   window.addEventListener("viewshell:message", function (event) {
@@ -81,5 +87,10 @@
   reloadPageEl.addEventListener("click", function () {
     writeLine("page", { action: "reload" });
     window.location.reload();
+  });
+
+  navigateDeniedEl.addEventListener("click", function () {
+    writeLine("page", { action: "navigate", url: "https://example.com/", expected: "deny" });
+    window.location.href = "https://example.com/";
   });
 })();
