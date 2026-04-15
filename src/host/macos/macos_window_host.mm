@@ -46,65 +46,8 @@ namespace viewshell { class MacOSWindowHost; }
   if (!self.host || ![message.body isKindOfClass:[NSString class]]) {
     return;
   }
-
   std::string body([(NSString*)message.body UTF8String]);
-  auto parsed = nlohmann::json::parse(body, nullptr, false);
-  if (parsed.is_discarded() || !parsed.is_object()) {
-    return;
-  }
-
-  auto kind_it = parsed.find("kind");
-  auto name_it = parsed.find("name");
-  auto payload_it = parsed.find("payload");
-  auto request_id_it = parsed.find("requestId");
-  if (kind_it == parsed.end() || !kind_it->is_string()) {
-    return;
-  }
-
-  std::string kind = *kind_it;
-  std::string name = (name_it != parsed.end() && name_it->is_string()) ? std::string(*name_it) : std::string();
-  viewshell::Json payload = (payload_it != parsed.end()) ? *payload_it : viewshell::Json::object();
-
-  if (kind == "close") {
-    (void)self.host->close();
-    return;
-  }
-  if (kind == "drag") {
-    NSWindow* window = (NSWindow*)self.host->window_;
-    NSEvent* event = [NSApp currentEvent];
-    if (window && event) {
-      [window performWindowDragWithEvent:event];
-    }
-    return;
-  }
-  if (kind == "subscribe") {
-    self.host->subscribed_events_.insert(name);
-    return;
-  }
-  if (kind == "unsubscribe") {
-    self.host->subscribed_events_.erase(name);
-    return;
-  }
-  if (kind == "invoke") {
-    auto result = self.host->invoke_bus_->dispatch(name, payload);
-    viewshell::Json message_out{{"kind", "invoke_result"}, {"name", name}, {"ok", static_cast<bool>(result)}, {"payload", result ? *result : viewshell::Json::object()}};
-    if (request_id_it != parsed.end() && request_id_it->is_number_unsigned()) {
-      message_out["requestId"] = *request_id_it;
-    }
-    if (!result) {
-      message_out["error"] = viewshell::Json{{"code", result.error().code}, {"message", result.error().message}};
-    }
-    NSString* js = [NSString stringWithFormat:@"window.dispatchEvent(new CustomEvent('viewshell:message', { detail: %@ }));", to_nsstring(message_out.dump())];
-    [(WKWebView*)self.host->webview_ evaluateJavaScript:js completionHandler:nil];
-    return;
-  }
-  if (kind == "emit") {
-    if (self.host->subscribed_events_.count(name)) {
-      viewshell::Json message_out{{"kind", "native_event"}, {"name", name}, {"payload", payload}};
-      NSString* js = [NSString stringWithFormat:@"window.dispatchEvent(new CustomEvent('viewshell:message', { detail: %@ }));", to_nsstring(message_out.dump())];
-      [(WKWebView*)self.host->webview_ evaluateJavaScript:js completionHandler:nil];
-    }
-  }
+  self.host->handle_script_message(body);
 }
 
 @end
@@ -412,9 +355,76 @@ Result<void> MacOSWindowHost::emit(std::string name, const Json& payload) {
     return {};
   }
   Json message_out{{"kind", "native_event"}, {"name", name}, {"payload", payload}};
-  NSString* js = [NSString stringWithFormat:@"window.dispatchEvent(new CustomEvent('viewshell:message', { detail: %@ }));", to_nsstring(message_out.dump())];
-  [(WKWebView*)webview_ evaluateJavaScript:js completionHandler:nil];
+  dispatch_json_to_page(message_out);
   return {};
+}
+
+void MacOSWindowHost::dispatch_json_to_page(const Json& payload) {
+  if (!webview_) {
+    return;
+  }
+  NSString* js = [NSString stringWithFormat:@"window.dispatchEvent(new CustomEvent('viewshell:message', { detail: %@ }));", to_nsstring(payload.dump())];
+  [(WKWebView*)webview_ evaluateJavaScript:js completionHandler:nil];
+}
+
+void MacOSWindowHost::begin_drag() {
+  NSWindow* window = (NSWindow*)window_;
+  NSEvent* event = [NSApp currentEvent];
+  if (window && event) {
+    [window performWindowDragWithEvent:event];
+  }
+}
+
+void MacOSWindowHost::handle_script_message(std::string_view message) {
+  auto parsed = nlohmann::json::parse(message, nullptr, false);
+  if (parsed.is_discarded() || !parsed.is_object()) {
+    return;
+  }
+
+  auto kind_it = parsed.find("kind");
+  auto name_it = parsed.find("name");
+  auto payload_it = parsed.find("payload");
+  auto request_id_it = parsed.find("requestId");
+  if (kind_it == parsed.end() || !kind_it->is_string()) {
+    return;
+  }
+
+  std::string kind = *kind_it;
+  std::string name = (name_it != parsed.end() && name_it->is_string()) ? std::string(*name_it) : std::string();
+  Json payload = (payload_it != parsed.end()) ? *payload_it : Json::object();
+
+  if (kind == "close") {
+    (void)close();
+    return;
+  }
+  if (kind == "drag") {
+    begin_drag();
+    return;
+  }
+  if (kind == "subscribe") {
+    subscribed_events_.insert(name);
+    return;
+  }
+  if (kind == "unsubscribe") {
+    subscribed_events_.erase(name);
+    return;
+  }
+  if (kind == "invoke") {
+    auto result = invoke_bus_->dispatch(name, payload);
+    Json message_out{{"kind", "invoke_result"}, {"name", name}, {"ok", static_cast<bool>(result)}, {"payload", result ? *result : Json::object()}};
+    if (request_id_it != parsed.end() && request_id_it->is_number_unsigned()) {
+      message_out["requestId"] = *request_id_it;
+    }
+    if (!result) {
+      message_out["error"] = Json{{"code", result.error().code}, {"message", result.error().message}};
+    }
+    dispatch_json_to_page(message_out);
+    return;
+  }
+  if (kind == "emit" && subscribed_events_.count(name)) {
+    Json message_out{{"kind", "native_event"}, {"name", name}, {"payload", payload}};
+    dispatch_json_to_page(message_out);
+  }
 }
 
 Result<Capabilities> MacOSWindowHost::capabilities() const {

@@ -54,6 +54,10 @@ public:
   Result<void> register_command(std::string name, CommandHandler handler) override;
   Result<void> emit(std::string name, const Json& payload) override;
 
+  void handle_script_message(std::string_view message);
+  void dispatch_json_to_page(const Json& payload);
+  void begin_drag();
+
 private:
   MacOSWindowHost(std::shared_ptr<RuntimeAppState> app_state,
       std::shared_ptr<RuntimeWindowState> window_state);
