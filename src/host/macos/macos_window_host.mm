@@ -22,13 +22,6 @@ namespace viewshell { class MacOSWindowHost; }
 @property(nonatomic, assign) viewshell::MacOSWindowHost* host;
 @end
 
-namespace viewshell {
-
-MacOSWindowHost::MacOSWindowHost(std::shared_ptr<RuntimeAppState> app_state,
-    std::shared_ptr<RuntimeWindowState> window_state)
-    : app_state_(std::move(app_state)),
-      window_state_(std::move(window_state)) {}
-
 @implementation ViewshellWindowDelegate
 
 - (BOOL)windowShouldClose:(id)sender {
@@ -40,10 +33,22 @@ MacOSWindowHost::MacOSWindowHost(std::shared_ptr<RuntimeAppState> app_state,
 
 @end
 
+namespace viewshell {
+
+MacOSWindowHost::MacOSWindowHost(std::shared_ptr<RuntimeAppState> app_state,
+    std::shared_ptr<RuntimeWindowState> window_state)
+    : app_state_(std::move(app_state)),
+      window_state_(std::move(window_state)) {}
+
 MacOSWindowHost::~MacOSWindowHost() {
-  NSWindow* window = (__bridge NSWindow*)window_;
+  NSWindow* window = (NSWindow*)window_;
   if (window) {
     [window close];
+    [window release];
+  }
+  ViewshellWindowDelegate* delegate = (ViewshellWindowDelegate*)delegate_;
+  if (delegate) {
+    [delegate release];
   }
 }
 
@@ -74,8 +79,8 @@ Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
     [window setLevel:NSFloatingWindowLevel];
   }
 
-  host->window_ = (__bridge_retained void*)window;
-  host->delegate_ = (__bridge_retained void*)delegate;
+  host->window_ = (void*)[window retain];
+  host->delegate_ = (void*)[delegate retain];
   return host;
 }
 
@@ -93,7 +98,7 @@ Result<void> MacOSWindowHost::ensure_window() const {
 
 void MacOSWindowHost::update_style() {
   if (!window_) return;
-  NSWindow* window = (__bridge NSWindow*)window_;
+  NSWindow* window = (NSWindow*)window_;
   NSWindowStyleMask style = borderless_ ? NSWindowStyleMaskBorderless : (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable);
   [window setStyleMask:style];
   [window setLevel:always_on_top_ ? NSFloatingWindowLevel : NSNormalWindowLevel];
@@ -101,18 +106,18 @@ void MacOSWindowHost::update_style() {
 
 Result<void> MacOSWindowHost::set_title(std::string_view title) {
   if (auto result = ensure_window(); !result) return result;
-  NSWindow* window = (__bridge NSWindow*)window_;
+  NSWindow* window = (NSWindow*)window_;
   [window setTitle:to_nsstring(title)];
   return {};
 }
 
-Result<void> MacOSWindowHost::maximize() { if (auto r=ensure_window(); !r) return r; [(__bridge NSWindow*)window_ zoom:nil]; return {}; }
-Result<void> MacOSWindowHost::unmaximize() { if (auto r=ensure_window(); !r) return r; [(__bridge NSWindow*)window_ zoom:nil]; return {}; }
-Result<void> MacOSWindowHost::minimize() { if (auto r=ensure_window(); !r) return r; [(__bridge NSWindow*)window_ miniaturize:nil]; return {}; }
-Result<void> MacOSWindowHost::unminimize() { if (auto r=ensure_window(); !r) return r; [(__bridge NSWindow*)window_ deminiaturize:nil]; return {}; }
-Result<void> MacOSWindowHost::show() { if (auto r=ensure_window(); !r) return r; [(__bridge NSWindow*)window_ orderFront:nil]; return {}; }
-Result<void> MacOSWindowHost::hide() { if (auto r=ensure_window(); !r) return r; [(__bridge NSWindow*)window_ orderOut:nil]; return {}; }
-Result<void> MacOSWindowHost::focus() { if (auto r=ensure_window(); !r) return r; [(__bridge NSWindow*)window_ makeKeyAndOrderFront:nil]; [NSApp activateIgnoringOtherApps:YES]; return {}; }
+Result<void> MacOSWindowHost::maximize() { if (auto r=ensure_window(); !r) return r; [(NSWindow*)window_ zoom:nil]; return {}; }
+Result<void> MacOSWindowHost::unmaximize() { if (auto r=ensure_window(); !r) return r; [(NSWindow*)window_ zoom:nil]; return {}; }
+Result<void> MacOSWindowHost::minimize() { if (auto r=ensure_window(); !r) return r; [(NSWindow*)window_ miniaturize:nil]; return {}; }
+Result<void> MacOSWindowHost::unminimize() { if (auto r=ensure_window(); !r) return r; [(NSWindow*)window_ deminiaturize:nil]; return {}; }
+Result<void> MacOSWindowHost::show() { if (auto r=ensure_window(); !r) return r; [(NSWindow*)window_ orderFront:nil]; return {}; }
+Result<void> MacOSWindowHost::hide() { if (auto r=ensure_window(); !r) return r; [(NSWindow*)window_ orderOut:nil]; return {}; }
+Result<void> MacOSWindowHost::focus() { if (auto r=ensure_window(); !r) return r; [(NSWindow*)window_ makeKeyAndOrderFront:nil]; [NSApp activateIgnoringOtherApps:YES]; return {}; }
 
 Result<void> MacOSWindowHost::set_size(Size size) {
   if (auto r = ensure_window(); !r) return r;
@@ -125,7 +130,7 @@ Result<void> MacOSWindowHost::set_size(Size size) {
 
 Result<Size> MacOSWindowHost::get_size() const {
   if (auto r = ensure_window(); !r) return tl::unexpected(r.error());
-  NSRect frame = [(__bridge NSWindow*)window_ frame];
+  NSRect frame = [(NSWindow*)window_ frame];
   return Size{static_cast<int>(frame.size.width), static_cast<int>(frame.size.height)};
 }
 
@@ -140,7 +145,7 @@ Result<void> MacOSWindowHost::set_position(Position pos) {
 
 Result<Position> MacOSWindowHost::get_position() const {
   if (auto r = ensure_window(); !r) return tl::unexpected(r.error());
-  NSRect frame = [(__bridge NSWindow*)window_ frame];
+  NSRect frame = [(NSWindow*)window_ frame];
   return Position{static_cast<int>(frame.origin.x), static_cast<int>(frame.origin.y)};
 }
 
@@ -156,7 +161,7 @@ Result<void> MacOSWindowHost::close() {
   if (auto state = window_state_.lock()) {
     state->is_closed = true;
   }
-  [(__bridge NSWindow*)window_ orderOut:nil];
+  [(NSWindow*)window_ orderOut:nil];
   [NSApp stop:nil];
   return {};
 }
