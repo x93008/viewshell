@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 project(viewshell LANGUAGES CXX)
 
+if(APPLE)
+  enable_language(OBJCXX)
+endif()
+
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install CACHE PATH "default install prefix" FORCE)
 endif()
@@ -16,7 +20,7 @@ endif()
 find_package(nlohmann_json REQUIRED)
 find_package(tl-expected REQUIRED)
 find_package(GTest REQUIRED)
-if(NOT WIN32)
+if(NOT WIN32 AND NOT APPLE)
     find_package(PkgConfig REQUIRED)
 endif()
 

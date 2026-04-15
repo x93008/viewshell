@@ -18,6 +18,11 @@ if(WIN32)
     webview/win32_webview_host.cpp
     bridge/invoke_bus.cpp
   )
+elseif(APPLE)
+  target_sources(viewshell PRIVATE
+    runtime/macos_backend_runtime.mm
+    host/macos/macos_window_host.mm
+  )
 else()
   target_sources(viewshell PRIVATE
     runtime/x11_backend_runtime.cpp
