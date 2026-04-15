@@ -1,0 +1,28 @@
+examples/hello_viewshell/app/main.js
+  09b0d74280706126 10,12,32-35,91-94
+examples/hello_viewshell/app/index.html
+  09b0d74280706126 75
+examples/hello_viewshell/main.cpp
+  09b0d74280706126 46-53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.1",
+  "base_commit_sha": "895c34c580eb763c6867d8f43888abaad8d051c6",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 21,
+      "total_deletions": 1,
+      "accepted_lines": 20,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/99a4657471d73a2729de0c397a398492eadb1bfb06a135a509e2e0261ef816c9"
+    }
+  }
+}
