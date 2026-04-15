@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <string_view>
 #include <functional>
+#include <vector>
 
 #include <wrl.h>
 #include <WebView2.h>
@@ -24,6 +25,9 @@ public:
   Result<void> load_file(std::string_view path);
   Result<void> evaluate_script(std::string_view script);
   Result<void> add_init_script(std::string_view script);
+  Result<void> open_devtools();
+  Result<void> close_devtools();
+  Result<void> on_page_load(PageLoadHandler handler);
   Result<void> set_message_handler(std::function<void(std::string_view)> handler);
   Result<void> post_json_message(std::string_view raw_message);
   void set_transparent_background(bool enabled) { transparent_background_ = enabled; }
@@ -39,6 +43,8 @@ private:
   bool com_initialized_ = false;
   bool transparent_background_ = false;
   std::function<void(std::string_view)> message_handler_;
+  std::vector<std::string> init_scripts_;
+  std::vector<PageLoadHandler> page_load_handlers_;
 };
 
 } // namespace viewshell

@@ -151,6 +151,55 @@ Result<void> Win32WebviewHost::attach(HWND hwnd, const WindowOptions&) {
     }
   }
 
+  webview_->add_NavigationStarting(
+      Microsoft::WRL::Callback<ICoreWebView2NavigationStartingEventHandler>(
+          [this](ICoreWebView2*, ICoreWebView2NavigationStartingEventArgs* args) -> HRESULT {
+            LPWSTR uri = nullptr;
+            args->get_Uri(&uri);
+            std::wstring wide = uri ? uri : L"";
+            if (uri) CoTaskMemFree(uri);
+            int size = WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), -1, nullptr, 0, nullptr, nullptr);
+            std::string utf8(size > 0 ? size - 1 : 0, '\0');
+            if (size > 1) {
+              WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), -1, utf8.data(), size - 1, nullptr, nullptr);
+            }
+            PageLoadEvent event{utf8, "started", std::nullopt};
+            for (auto& handler : page_load_handlers_) {
+              handler(event);
+            }
+            return S_OK;
+          }).Get(),
+      nullptr);
+
+  webview_->add_NavigationCompleted(
+      Microsoft::WRL::Callback<ICoreWebView2NavigationCompletedEventHandler>(
+          [this](ICoreWebView2* sender, ICoreWebView2NavigationCompletedEventArgs* args) -> HRESULT {
+            LPWSTR uri = nullptr;
+            sender->get_Source(&uri);
+            std::wstring wide = uri ? uri : L"";
+            if (uri) CoTaskMemFree(uri);
+            int size = WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), -1, nullptr, 0, nullptr, nullptr);
+            std::string utf8(size > 0 ? size - 1 : 0, '\0');
+            if (size > 1) {
+              WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), -1, utf8.data(), size - 1, nullptr, nullptr);
+            }
+            BOOL success = FALSE;
+            args->get_IsSuccess(&success);
+            COREWEBVIEW2_WEB_ERROR_STATUS status{};
+            args->get_WebErrorStatus(&status);
+            PageLoadEvent event{utf8, "finished", success ? std::nullopt : std::optional<std::string>(std::to_string(static_cast<int>(status)))};
+            for (auto& handler : page_load_handlers_) {
+              handler(event);
+            }
+            return S_OK;
+          }).Get(),
+      nullptr);
+
+  for (const auto& script : init_scripts_) {
+    auto wide = to_wstring(script);
+    webview_->AddScriptToExecuteOnDocumentCreated(wide.c_str(), nullptr);
+  }
+
   if (message_handler_) {
     webview_->add_WebMessageReceived(
         Microsoft::WRL::Callback<ICoreWebView2WebMessageReceivedEventHandler>(
@@ -223,13 +272,42 @@ Result<void> Win32WebviewHost::evaluate_script(std::string_view script) {
 }
 
 Result<void> Win32WebviewHost::add_init_script(std::string_view script) {
+  init_scripts_.push_back(std::string(script));
+  if (controller_ && webview_) {
+    auto wide = to_wstring(script);
+    HRESULT hr = webview_->AddScriptToExecuteOnDocumentCreated(wide.c_str(), nullptr);
+    if (FAILED(hr)) {
+      return tl::unexpected(Error{"invalid_state",
+          "failed to add init script in WebView2: " + format_hresult(hr)});
+    }
+  }
+  return {};
+}
+
+Result<void> Win32WebviewHost::open_devtools() {
   if (auto result = ensure_ready(); !result) return result;
-  auto wide = to_wstring(script);
-  HRESULT hr = webview_->AddScriptToExecuteOnDocumentCreated(wide.c_str(), nullptr);
+  HRESULT hr = webview_->OpenDevToolsWindow();
   if (FAILED(hr)) {
     return tl::unexpected(Error{"invalid_state",
-        "failed to add init script in WebView2: " + format_hresult(hr)});
+        "failed to open WebView2 devtools: " + format_hresult(hr)});
   }
+  return {};
+}
+
+Result<void> Win32WebviewHost::close_devtools() {
+  if (auto result = ensure_ready(); !result) return result;
+  auto method = to_wstring("Browser.close");
+  auto params = to_wstring("{}");
+  HRESULT hr = webview_->CallDevToolsProtocolMethod(method.c_str(), params.c_str(), nullptr);
+  if (FAILED(hr)) {
+    return tl::unexpected(Error{"invalid_state",
+        "failed to close WebView2 devtools: " + format_hresult(hr)});
+  }
+  return {};
+}
+
+Result<void> Win32WebviewHost::on_page_load(PageLoadHandler handler) {
+  page_load_handlers_.push_back(std::move(handler));
   return {};
 }
 

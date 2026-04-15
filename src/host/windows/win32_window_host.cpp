@@ -443,9 +443,18 @@ Result<void> Win32WindowHost::add_init_script(std::string_view script) {
   if (!webview_host_) return tl::unexpected(unsupported_webview_error());
   return webview_host_->add_init_script(script);
 }
-Result<void> Win32WindowHost::open_devtools() { return tl::unexpected(unsupported_webview_error()); }
-Result<void> Win32WindowHost::close_devtools() { return tl::unexpected(unsupported_webview_error()); }
-Result<void> Win32WindowHost::on_page_load(PageLoadHandler) { return tl::unexpected(unsupported_webview_error()); }
+Result<void> Win32WindowHost::open_devtools() {
+  if (!webview_host_) return tl::unexpected(unsupported_webview_error());
+  return webview_host_->open_devtools();
+}
+Result<void> Win32WindowHost::close_devtools() {
+  if (!webview_host_) return tl::unexpected(unsupported_webview_error());
+  return webview_host_->close_devtools();
+}
+Result<void> Win32WindowHost::on_page_load(PageLoadHandler handler) {
+  if (!webview_host_) return tl::unexpected(unsupported_webview_error());
+  return webview_host_->on_page_load(std::move(handler));
+}
 Result<void> Win32WindowHost::set_navigation_handler(NavigationHandler) { return tl::unexpected(unsupported_webview_error()); }
 Result<void> Win32WindowHost::register_command(std::string name, CommandHandler handler) {
   return invoke_bus_->register_command(std::move(name), std::move(handler));
@@ -462,6 +471,8 @@ Result<Capabilities> Win32WindowHost::capabilities() const {
   Capabilities caps;
   caps.window.borderless = true;
   caps.window.always_on_top = true;
+  caps.webview.devtools = true;
+  caps.webview.script_eval = true;
   caps.bridge.invoke = true;
   caps.bridge.native_events = true;
   return caps;
