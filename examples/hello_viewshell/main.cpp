@@ -44,7 +44,10 @@ int main(int argc, char* argv[]) {
 
   auto bridge = win->bridge();
   win->set_navigation_handler([bridge](const viewshell::NavigationRequest& request) mutable {
-    bool allow = request.url.rfind("file://", 0) == 0 || request.url.rfind("viewshell://app/", 0) == 0;
+    bool allow =
+        request.url.rfind("file://", 0) == 0 ||
+        request.url.rfind("viewshell://app/", 0) == 0 ||
+        request.url.rfind("https://github.com/x93008/viewshell", 0) == 0;
     if (bridge) {
       (void)bridge->emit("navigation-decision", viewshell::Json{{"url", request.url}, {"decision", allow ? "allow" : "deny"}});
     }
