@@ -4,7 +4,9 @@
 
 #include "runtime/backend_runtime.h"
 
-#ifdef _WIN32
+#ifdef __APPLE__
+#include "runtime/macos_backend_runtime.h"
+#elif defined(_WIN32)
 #include "runtime/win32_backend_runtime.h"
 #else
 #include "runtime/x11_backend_runtime.h"
@@ -13,7 +15,9 @@
 namespace viewshell {
 
 std::unique_ptr<BackendRuntime> BackendFactory::create() {
-#ifdef _WIN32
+#ifdef __APPLE__
+  return std::make_unique<MacOSBackendRuntime>();
+#elif defined(_WIN32)
   return std::make_unique<Win32BackendRuntime>();
 #else
   return std::make_unique<X11BackendRuntime>();

@@ -12,7 +12,7 @@ add_executable(window_lifecycle_test unit/window_lifecycle_test.cpp unit/runtime
 target_link_libraries(window_lifecycle_test PRIVATE viewshell GTest::gtest_main nlohmann_json::nlohmann_json)
 gtest_discover_tests(window_lifecycle_test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
-if(NOT WIN32)
+if(NOT WIN32 AND NOT APPLE)
   add_executable(window_driver_smoke_test integration/window_driver_smoke_test.cpp)
   target_include_directories(window_driver_smoke_test PRIVATE ${CMAKE_SOURCE_DIR}/src ${GTK3_INCLUDE_DIRS} ${X11_INCLUDE_DIRS})
   target_compile_options(window_driver_smoke_test PRIVATE ${GTK3_CFLAGS_OTHER})
