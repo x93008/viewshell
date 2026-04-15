@@ -8,32 +8,21 @@
 
 #include "viewshell/runtime_state.h"
 
-namespace viewshell {
-
-namespace {
-
-std::string unsupported_webview_message() {
+static std::string unsupported_webview_message() {
   return "macOS webview backend not implemented yet";
 }
 
-std::string to_utf8(NSString* value) {
-  if (!value) return {};
-  return std::string([value UTF8String]);
-}
-
-NSString* to_nsstring(std::string_view value) {
+static NSString* to_nsstring(std::string_view value) {
   return [[NSString alloc] initWithBytes:value.data() length:value.size() encoding:NSUTF8StringEncoding];
 }
 
-class MacOSWindowHost;
+namespace viewshell { class MacOSWindowHost; }
 
 @interface ViewshellWindowDelegate : NSObject<NSWindowDelegate>
 @property(nonatomic, assign) viewshell::MacOSWindowHost* host;
 @end
 
-} // namespace
-
-class MacOSWindowHost;
+namespace viewshell {
 
 MacOSWindowHost::MacOSWindowHost(std::shared_ptr<RuntimeAppState> app_state,
     std::shared_ptr<RuntimeWindowState> window_state)
