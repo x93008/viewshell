@@ -6,6 +6,7 @@
   var emitEventEl = document.getElementById("emitEvent");
   var subscribeEventEl = document.getElementById("subscribeEvent");
   var unsubscribeEventEl = document.getElementById("unsubscribeEvent");
+  var reloadPageEl = document.getElementById("reloadPage");
   var unsubscribeNativeReady = null;
 
   function writeLine(title, payload) {
@@ -22,6 +23,9 @@
 
   statusEl.textContent = "Bridge ready";
   writeLine("bridge:ready", { invoke: true, emit: true, on: true, off: true });
+  writeLine("init-script", {
+    value: window.__viewshellInitScriptRan || "missing"
+  });
 
   window.addEventListener("viewshell:message", function (event) {
     writeLine("native -> page", event.detail);
@@ -72,5 +76,10 @@
     unsubscribeNativeReady();
     unsubscribeNativeReady = null;
     writeLine("subscription", { name: "native-ready", status: "unsubscribed" });
+  });
+
+  reloadPageEl.addEventListener("click", function () {
+    writeLine("page", { action: "reload" });
+    window.location.reload();
   });
 })();
