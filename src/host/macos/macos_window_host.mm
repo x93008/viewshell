@@ -5,8 +5,10 @@
 #import <AppKit/AppKit.h>
 #import <WebKit/WebKit.h>
 
+#include <nlohmann/json.hpp>
 #include <string>
 
+#include "bridge/invoke_bus.h"
 #include "viewshell/runtime_state.h"
 
 static std::string unsupported_webview_message() {
@@ -23,6 +25,10 @@ namespace viewshell { class MacOSWindowHost; }
 @property(nonatomic, assign) viewshell::MacOSWindowHost* host;
 @end
 
+@interface ViewshellWebMessageHandler : NSObject<WKScriptMessageHandler>
+@property(nonatomic, assign) viewshell::MacOSWindowHost* host;
+@end
+
 @implementation ViewshellWindowDelegate
 
 - (BOOL)windowShouldClose:(id)sender {
@@ -34,7 +40,155 @@ namespace viewshell { class MacOSWindowHost; }
 
 @end
 
+@implementation ViewshellWebMessageHandler
+
+- (void)userContentController:(WKUserContentController *)userContentController didReceiveScriptMessage:(WKScriptMessage *)message {
+  if (!self.host || ![message.body isKindOfClass:[NSString class]]) {
+    return;
+  }
+
+  std::string body([(NSString*)message.body UTF8String]);
+  auto parsed = nlohmann::json::parse(body, nullptr, false);
+  if (parsed.is_discarded() || !parsed.is_object()) {
+    return;
+  }
+
+  auto kind_it = parsed.find("kind");
+  auto name_it = parsed.find("name");
+  auto payload_it = parsed.find("payload");
+  auto request_id_it = parsed.find("requestId");
+  if (kind_it == parsed.end() || !kind_it->is_string()) {
+    return;
+  }
+
+  std::string kind = *kind_it;
+  std::string name = (name_it != parsed.end() && name_it->is_string()) ? std::string(*name_it) : std::string();
+  viewshell::Json payload = (payload_it != parsed.end()) ? *payload_it : viewshell::Json::object();
+
+  if (kind == "close") {
+    (void)self.host->close();
+    return;
+  }
+  if (kind == "drag") {
+    NSWindow* window = (NSWindow*)self.host->window_;
+    NSEvent* event = [NSApp currentEvent];
+    if (window && event) {
+      [window performWindowDragWithEvent:event];
+    }
+    return;
+  }
+  if (kind == "subscribe") {
+    self.host->subscribed_events_.insert(name);
+    return;
+  }
+  if (kind == "unsubscribe") {
+    self.host->subscribed_events_.erase(name);
+    return;
+  }
+  if (kind == "invoke") {
+    auto result = self.host->invoke_bus_->dispatch(name, payload);
+    viewshell::Json message_out{{"kind", "invoke_result"}, {"name", name}, {"ok", static_cast<bool>(result)}, {"payload", result ? *result : viewshell::Json::object()}};
+    if (request_id_it != parsed.end() && request_id_it->is_number_unsigned()) {
+      message_out["requestId"] = *request_id_it;
+    }
+    if (!result) {
+      message_out["error"] = viewshell::Json{{"code", result.error().code}, {"message", result.error().message}};
+    }
+    NSString* js = [NSString stringWithFormat:@"window.dispatchEvent(new CustomEvent('viewshell:message', { detail: %@ }));", to_nsstring(message_out.dump())];
+    [(WKWebView*)self.host->webview_ evaluateJavaScript:js completionHandler:nil];
+    return;
+  }
+  if (kind == "emit") {
+    if (self.host->subscribed_events_.count(name)) {
+      viewshell::Json message_out{{"kind", "native_event"}, {"name", name}, {"payload", payload}};
+      NSString* js = [NSString stringWithFormat:@"window.dispatchEvent(new CustomEvent('viewshell:message', { detail: %@ }));", to_nsstring(message_out.dump())];
+      [(WKWebView*)self.host->webview_ evaluateJavaScript:js completionHandler:nil];
+    }
+  }
+}
+
+@end
+
 namespace viewshell {
+
+namespace {
+
+constexpr const char* kMacBridgeBootstrap = R"JS((function () {
+  if (!window.webkit || !window.webkit.messageHandlers || !window.webkit.messageHandlers.viewshellBridge || window.__viewshell) return;
+
+  var nextRequestId = 1;
+  var pending = new Map();
+  var listeners = new Map();
+
+  function post(kind, name, payload, requestId) {
+    window.webkit.messageHandlers.viewshellBridge.postMessage(JSON.stringify({
+      kind: kind,
+      name: name || null,
+      payload: payload || {},
+      requestId: requestId || null
+    }));
+  }
+
+  window.addEventListener('viewshell:message', function (event) {
+    var detail = event.detail || {};
+    if (detail.kind === 'invoke_result' && detail.requestId != null) {
+      var entry = pending.get(detail.requestId);
+      if (!entry) return;
+      pending.delete(detail.requestId);
+      if (detail.ok) {
+        entry.resolve(detail.payload || {});
+      } else {
+        entry.reject(detail.error || { code: 'bridge_error', message: 'unknown bridge error' });
+      }
+      return;
+    }
+    if (detail.kind === 'native_event') {
+      var entries = listeners.get(detail.name) || [];
+      entries.slice().forEach(function (listener) {
+        listener(detail.payload || {});
+      });
+    }
+  });
+
+  window.__viewshell = {
+    invoke: function (name, args) {
+      var requestId = nextRequestId++;
+      return new Promise(function (resolve, reject) {
+        pending.set(requestId, { resolve: resolve, reject: reject });
+        post('invoke', name, args || {}, requestId);
+      });
+    },
+    emit: function (name, payload) {
+      post('emit', name, payload || {}, null);
+    },
+    on: function (name, listener) {
+      var entries = listeners.get(name) || [];
+      var wasEmpty = entries.length === 0;
+      entries.push(listener);
+      listeners.set(name, entries);
+      if (wasEmpty) post('subscribe', name, {}, null);
+      return function () { window.__viewshell.off(name, listener); };
+    },
+    off: function (name, listener) {
+      var entries = listeners.get(name) || [];
+      var next = entries.filter(function (entry) { return entry !== listener; });
+      listeners.set(name, next);
+      if (entries.length > 0 && next.length === 0) post('unsubscribe', name, {}, null);
+    }
+  };
+
+  window.webkit.messageHandlers.viewshellDrag = {
+    postMessage: function (payload) {
+      post('drag', null, { value: payload || 'drag' }, null);
+    }
+  };
+
+  window.__viewshellWinClose = function () {
+    post('close', null, {}, null);
+  };
+})();)JS";
+
+} // namespace
 
 MacOSWindowHost::MacOSWindowHost(std::shared_ptr<RuntimeAppState> app_state,
     std::shared_ptr<RuntimeWindowState> window_state)
@@ -56,6 +210,10 @@ MacOSWindowHost::~MacOSWindowHost() {
   if (delegate) {
     [delegate release];
   }
+  ViewshellWebMessageHandler* message_handler = (ViewshellWebMessageHandler*)message_handler_;
+  if (message_handler) {
+    [message_handler release];
+  }
 }
 
 Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
@@ -69,6 +227,7 @@ Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
       new MacOSWindowHost(std::move(app_state), std::move(window_state)));
   host->borderless_ = options.borderless;
   host->always_on_top_ = options.always_on_top;
+  host->invoke_bus_ = std::make_unique<InvokeBus>();
 
   NSRect rect = NSMakeRect(options.x.value_or(100), options.y.value_or(100), options.width, options.height);
   NSWindowStyleMask style = host->borderless_ ? NSWindowStyleMaskBorderless : (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable);
@@ -86,14 +245,29 @@ Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
   }
 
   WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
+  WKUserContentController* user_content = [[WKUserContentController alloc] init];
+  ViewshellWebMessageHandler* message_handler = [[ViewshellWebMessageHandler alloc] init];
+  message_handler.host = host.get();
+  [user_content addScriptMessageHandler:message_handler name:@"viewshellBridge"];
+  WKUserScript* bootstrap = [[WKUserScript alloc] initWithSource:to_nsstring(kMacBridgeBootstrap) injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:NO];
+  [user_content addUserScript:bootstrap];
+  [configuration setUserContentController:user_content];
   WKWebView* webview = [[WKWebView alloc] initWithFrame:[[window contentView] bounds] configuration:configuration];
   [webview setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+  if (host->borderless_) {
+    [window setOpaque:NO];
+    [window setBackgroundColor:[NSColor clearColor]];
+    [webview setValue:@NO forKey:@"drawsBackground"];
+  }
   [[window contentView] addSubview:webview];
+  [bootstrap release];
+  [user_content release];
   [configuration release];
 
   host->window_ = (void*)[window retain];
   host->delegate_ = (void*)[delegate retain];
   host->webview_ = (void*)[webview retain];
+  host->message_handler_ = (void*)[message_handler retain];
 
   if (options.asset_root.has_value() && !options.asset_root->empty()) {
     auto load_result = host->load_file(*options.asset_root);
@@ -142,7 +316,7 @@ Result<void> MacOSWindowHost::focus() { if (auto r=ensure_window(); !r) return r
 
 Result<void> MacOSWindowHost::set_size(Size size) {
   if (auto r = ensure_window(); !r) return r;
-  NSWindow* window = (__bridge NSWindow*)window_;
+  NSWindow* window = (NSWindow*)window_;
   NSRect frame = [window frame];
   frame.size = NSMakeSize(size.width, size.height);
   [window setFrame:frame display:YES];
@@ -157,7 +331,7 @@ Result<Size> MacOSWindowHost::get_size() const {
 
 Result<void> MacOSWindowHost::set_position(Position pos) {
   if (auto r = ensure_window(); !r) return r;
-  NSWindow* window = (__bridge NSWindow*)window_;
+  NSWindow* window = (NSWindow*)window_;
   NSRect frame = [window frame];
   frame.origin = NSMakePoint(pos.x, pos.y);
   [window setFrameOrigin:frame.origin];
@@ -198,6 +372,7 @@ Result<void> MacOSWindowHost::load_url(std::string_view url) {
   [(WKWebView*)webview_ loadRequest:request];
   return {};
 }
+
 Result<void> MacOSWindowHost::load_file(std::string_view entry_file) {
   if (auto r = ensure_window(); !r) return r;
   if (!webview_) return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()});
@@ -210,31 +385,45 @@ Result<void> MacOSWindowHost::load_file(std::string_view entry_file) {
   [(WKWebView*)webview_ loadFileURL:file_url allowingReadAccessToURL:root_url];
   return {};
 }
+
 Result<void> MacOSWindowHost::reload() {
   if (auto r = ensure_window(); !r) return r;
   if (!webview_) return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()});
   [(WKWebView*)webview_ reload];
   return {};
 }
+
 Result<void> MacOSWindowHost::evaluate_script(std::string_view script) {
   if (auto r = ensure_window(); !r) return r;
   if (!webview_) return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()});
   [(WKWebView*)webview_ evaluateJavaScript:to_nsstring(script) completionHandler:nil];
   return {};
 }
+
 Result<void> MacOSWindowHost::add_init_script(std::string_view) { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
 Result<void> MacOSWindowHost::open_devtools() { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
 Result<void> MacOSWindowHost::close_devtools() { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
 Result<void> MacOSWindowHost::on_page_load(PageLoadHandler) { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
 Result<void> MacOSWindowHost::set_navigation_handler(NavigationHandler) { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
-Result<void> MacOSWindowHost::register_command(std::string, CommandHandler) { return tl::unexpected(Error{"unsupported_by_backend", "macOS bridge backend not implemented yet"}); }
-Result<void> MacOSWindowHost::emit(std::string, const Json&) { return tl::unexpected(Error{"bridge_unavailable", "macOS bridge backend not implemented yet"}); }
+Result<void> MacOSWindowHost::register_command(std::string name, CommandHandler handler) { return invoke_bus_->register_command(std::move(name), std::move(handler)); }
+
+Result<void> MacOSWindowHost::emit(std::string name, const Json& payload) {
+  if (!subscribed_events_.count(name) || !webview_) {
+    return {};
+  }
+  Json message_out{{"kind", "native_event"}, {"name", name}, {"payload", payload}};
+  NSString* js = [NSString stringWithFormat:@"window.dispatchEvent(new CustomEvent('viewshell:message', { detail: %@ }));", to_nsstring(message_out.dump())];
+  [(WKWebView*)webview_ evaluateJavaScript:js completionHandler:nil];
+  return {};
+}
 
 Result<Capabilities> MacOSWindowHost::capabilities() const {
   Capabilities caps;
   caps.window.borderless = true;
   caps.window.always_on_top = true;
   caps.webview.script_eval = true;
+  caps.bridge.invoke = true;
+  caps.bridge.native_events = true;
   return caps;
 }
 

@@ -3,6 +3,7 @@
 #ifdef __APPLE__
 
 #include <memory>
+#include <unordered_set>
 
 #include <viewshell/options.h>
 
@@ -12,6 +13,7 @@ namespace viewshell {
 
 struct RuntimeAppState;
 struct RuntimeWindowState;
+class InvokeBus;
 
 class MacOSWindowHost final : public WindowHost {
 public:
@@ -63,6 +65,9 @@ private:
   void* window_ = nullptr;
   void* delegate_ = nullptr;
   void* webview_ = nullptr;
+  void* message_handler_ = nullptr;
+  std::unique_ptr<InvokeBus> invoke_bus_;
+  std::unordered_set<std::string> subscribed_events_;
   bool borderless_ = false;
   bool always_on_top_ = false;
 };
