@@ -22,6 +22,7 @@ elseif(APPLE)
   target_sources(viewshell PRIVATE
     runtime/macos_backend_runtime.mm
     host/macos/macos_window_host.mm
+    bridge/invoke_bus.cpp
   )
 else()
   target_sources(viewshell PRIVATE
