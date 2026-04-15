@@ -62,6 +62,7 @@ private:
   std::weak_ptr<RuntimeWindowState> window_state_;
   void* window_ = nullptr;
   void* delegate_ = nullptr;
+  void* webview_ = nullptr;
   bool borderless_ = false;
   bool always_on_top_ = false;
 };

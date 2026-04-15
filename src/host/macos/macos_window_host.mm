@@ -3,6 +3,7 @@
 #include "host/macos/macos_window_host.h"
 
 #import <AppKit/AppKit.h>
+#import <WebKit/WebKit.h>
 
 #include <string>
 
@@ -41,6 +42,11 @@ MacOSWindowHost::MacOSWindowHost(std::shared_ptr<RuntimeAppState> app_state,
       window_state_(std::move(window_state)) {}
 
 MacOSWindowHost::~MacOSWindowHost() {
+  WKWebView* webview = (WKWebView*)webview_;
+  if (webview) {
+    [webview removeFromSuperview];
+    [webview release];
+  }
   NSWindow* window = (NSWindow*)window_;
   if (window) {
     [window close];
@@ -79,8 +85,15 @@ Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
     [window setLevel:NSFloatingWindowLevel];
   }
 
+  WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
+  WKWebView* webview = [[WKWebView alloc] initWithFrame:[[window contentView] bounds] configuration:configuration];
+  [webview setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+  [[window contentView] addSubview:webview];
+  [configuration release];
+
   host->window_ = (void*)[window retain];
   host->delegate_ = (void*)[delegate retain];
+  host->webview_ = (void*)[webview retain];
   return host;
 }
 
@@ -166,10 +179,41 @@ Result<void> MacOSWindowHost::close() {
   return {};
 }
 
-Result<void> MacOSWindowHost::load_url(std::string_view) { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
-Result<void> MacOSWindowHost::load_file(std::string_view) { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
-Result<void> MacOSWindowHost::reload() { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
-Result<void> MacOSWindowHost::evaluate_script(std::string_view) { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
+Result<void> MacOSWindowHost::load_url(std::string_view url) {
+  if (auto r = ensure_window(); !r) return r;
+  if (!webview_) return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()});
+  NSURL* nsurl = [NSURL URLWithString:to_nsstring(url)];
+  if (!nsurl) {
+    return tl::unexpected(Error{"invalid_state", "invalid URL for WKWebView"});
+  }
+  NSURLRequest* request = [NSURLRequest requestWithURL:nsurl];
+  [(WKWebView*)webview_ loadRequest:request];
+  return {};
+}
+Result<void> MacOSWindowHost::load_file(std::string_view entry_file) {
+  if (auto r = ensure_window(); !r) return r;
+  if (!webview_) return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()});
+  NSString* path = to_nsstring(entry_file);
+  NSURL* file_url = [NSURL fileURLWithPath:path];
+  if (!file_url) {
+    return tl::unexpected(Error{"invalid_state", "invalid file path for WKWebView"});
+  }
+  NSURL* root_url = [file_url URLByDeletingLastPathComponent];
+  [(WKWebView*)webview_ loadFileURL:file_url allowingReadAccessToURL:root_url];
+  return {};
+}
+Result<void> MacOSWindowHost::reload() {
+  if (auto r = ensure_window(); !r) return r;
+  if (!webview_) return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()});
+  [(WKWebView*)webview_ reload];
+  return {};
+}
+Result<void> MacOSWindowHost::evaluate_script(std::string_view script) {
+  if (auto r = ensure_window(); !r) return r;
+  if (!webview_) return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()});
+  [(WKWebView*)webview_ evaluateJavaScript:to_nsstring(script) completionHandler:nil];
+  return {};
+}
 Result<void> MacOSWindowHost::add_init_script(std::string_view) { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
 Result<void> MacOSWindowHost::open_devtools() { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
 Result<void> MacOSWindowHost::close_devtools() { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
@@ -182,6 +226,7 @@ Result<Capabilities> MacOSWindowHost::capabilities() const {
   Capabilities caps;
   caps.window.borderless = true;
   caps.window.always_on_top = true;
+  caps.webview.script_eval = true;
   return caps;
 }
 
