@@ -163,6 +163,13 @@ Result<void> Win32WebviewHost::attach(HWND hwnd, const WindowOptions&) {
             if (size > 1) {
               WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), -1, utf8.data(), size - 1, nullptr, nullptr);
             }
+            if (navigation_handler_) {
+              NavigationRequest request{utf8};
+              if (navigation_handler_(request) == NavigationDecision::Deny) {
+                args->put_Cancel(TRUE);
+                return S_OK;
+              }
+            }
             PageLoadEvent event{utf8, "started", std::nullopt};
             for (auto& handler : page_load_handlers_) {
               handler(event);
@@ -316,6 +323,11 @@ Result<void> Win32WebviewHost::close_devtools() {
 
 Result<void> Win32WebviewHost::on_page_load(PageLoadHandler handler) {
   page_load_handlers_.push_back(std::move(handler));
+  return {};
+}
+
+Result<void> Win32WebviewHost::set_navigation_handler(NavigationHandler handler) {
+  navigation_handler_ = std::move(handler);
   return {};
 }
 
