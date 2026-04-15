@@ -1,4 +1,4 @@
-add_executable(hello_viewshell main.cpp)
+add_executable(hello_viewshell main.cpp ../common/example_asset_path.cpp)
 target_link_libraries(hello_viewshell PRIVATE viewshell nlohmann_json::nlohmann_json ${GTK3_LIBRARIES} ${X11_LIBRARIES})
 
 set(HELLO_VIEWSHELL_ASSETS

@@ -1,15 +1,11 @@
 #include <viewshell/application.h>
 #include <viewshell/window_handle.h>
 #include <cstdio>
-#include <filesystem>
+
+#include "../common/example_asset_path.h"
 
 int main(int argc, char* argv[]) {
-  std::string exe_arg(argv[0]);
-  auto exe_dir = std::filesystem::canonical(std::filesystem::path(exe_arg)).parent_path();
-  auto asset_path = exe_dir / "app" / "index.html";
-  if (!std::filesystem::exists(asset_path)) {
-    asset_path = exe_dir.parent_path() / "app" / "index.html";
-  }
+  auto asset_path = viewshell::examples::resolve_example_asset_path(argv[0], "index.html");
 
   auto app = viewshell::Application::create(viewshell::AppOptions{});
   if (!app) {
@@ -18,7 +14,7 @@ int main(int argc, char* argv[]) {
   }
 
   viewshell::WindowOptions win_opts;
-  win_opts.asset_root = asset_path.string();
+  win_opts.asset_root = asset_path;
   win_opts.width = 400;
   win_opts.height = 400;
   win_opts.borderless = true;
