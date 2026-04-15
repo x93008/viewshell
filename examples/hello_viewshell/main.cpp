@@ -34,6 +34,13 @@ int main(int argc, char* argv[]) {
   }
 
   win->set_title("Hello Viewshell");
+  win->add_init_script("window.__viewshellInitScriptRan = 'yes';");
+  win->on_page_load([](const viewshell::PageLoadEvent& event) {
+    std::fprintf(stderr, "page-load: url=%s stage=%s error=%s\n",
+        event.url.c_str(),
+        event.stage.c_str(),
+        event.error_code ? event.error_code->c_str() : "none");
+  });
 
   auto bridge = win->bridge();
   if (bridge) {
