@@ -23,6 +23,25 @@
   var shell = document.getElementById('floatingShell');
   var colorToggle = document.getElementById('colorToggle');
   var collapseTimer = null;
+  var radius = 8;
+
+  function insideRoundedRect(event) {
+    var rect = shell.getBoundingClientRect();
+    var x = event.clientX - rect.left;
+    var y = event.clientY - rect.top;
+    var w = rect.width;
+    var h = rect.height;
+
+    if (x < 0 || y < 0 || x > w || y > h) return false;
+    if (x >= radius && x <= w - radius) return true;
+    if (y >= radius && y <= h - radius) return true;
+
+    var cx = x < radius ? radius : w - radius;
+    var cy = y < radius ? radius : h - radius;
+    var dx = x - cx;
+    var dy = y - cy;
+    return (dx * dx + dy * dy) <= radius * radius;
+  }
 
   function transition(state) {
     if (!window.__viewshell) return;
@@ -43,6 +62,15 @@
     if (!shell.classList.contains('expanded')) {
       transition('hover');
     }
+  });
+
+  shell.addEventListener('mousemove', function (event) {
+    if (shell.classList.contains('expanded')) return;
+    if (!insideRoundedRect(event)) {
+      scheduleCollapse();
+      return;
+    }
+    clearTimeout(collapseTimer);
   });
 
   shell.addEventListener('mouseleave', function () {

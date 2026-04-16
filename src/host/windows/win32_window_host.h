@@ -66,7 +66,6 @@ private:
   Result<void> ensure_window() const;
   void update_style();
   RECT client_rect() const;
-  void update_shape();
 
   std::weak_ptr<RuntimeAppState> app_state_;
   std::weak_ptr<RuntimeWindowState> window_state_;
