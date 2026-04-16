@@ -162,6 +162,10 @@ LRESULT CALLBACK Win32WindowHost::WindowProc(HWND hwnd, UINT message, WPARAM wpa
     return 0;
   }
 
+  if (message == WM_ERASEBKGND && self->borderless_) {
+    return 1;
+  }
+
   if (message == WM_SIZE && self->webview_host_) {
     auto rect = self->client_rect();
     (void)self->webview_host_->set_bounds(rect);
