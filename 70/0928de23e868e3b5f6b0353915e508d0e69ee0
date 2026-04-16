@@ -1,0 +1,25 @@
+examples/floating_panel_demo/app/index.html
+  09b0d74280706126 22-28,34-36,40,55-58,60-61
+examples/floating_panel_demo/main.cpp
+  09b0d74280706126 38-39,71,96,98-112
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "700928de23e868e3b5f6b0353915e508d0e69ee0",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 21,
+      "total_deletions": 15,
+      "accepted_lines": 37,
+      "overriden_lines": 0
+    }
+  }
+}
