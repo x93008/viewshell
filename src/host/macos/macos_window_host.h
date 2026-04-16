@@ -79,6 +79,7 @@ private:
   std::unordered_set<std::string> subscribed_events_;
   std::vector<std::string> init_scripts_;
   std::vector<PageLoadHandler> page_load_handlers_;
+  NavigationHandler navigation_handler_;
   bool borderless_ = false;
   bool always_on_top_ = false;
 };
