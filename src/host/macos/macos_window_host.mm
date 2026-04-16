@@ -33,6 +33,14 @@ namespace viewshell { class MacOSWindowHost; }
 @property(nonatomic, assign) viewshell::MacOSWindowHost* host;
 @end
 
+@interface ViewshellBorderlessWindow : NSWindow
+@end
+
+@implementation ViewshellBorderlessWindow
+- (BOOL)canBecomeKeyWindow { return YES; }
+- (BOOL)canBecomeMainWindow { return YES; }
+@end
+
 @implementation ViewshellWindowDelegate
 
 - (BOOL)windowShouldClose:(id)sender {
@@ -239,7 +247,9 @@ Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
 
   NSRect rect = NSMakeRect(options.x.value_or(100), options.y.value_or(100), options.width, options.height);
   NSWindowStyleMask style = host->borderless_ ? NSWindowStyleMaskBorderless : (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable);
-  NSWindow* window = [[NSWindow alloc] initWithContentRect:rect styleMask:style backing:NSBackingStoreBuffered defer:NO];
+  NSWindow* window = host->borderless_
+    ? [[ViewshellBorderlessWindow alloc] initWithContentRect:rect styleMask:style backing:NSBackingStoreBuffered defer:NO]
+    : [[NSWindow alloc] initWithContentRect:rect styleMask:style backing:NSBackingStoreBuffered defer:NO];
   if (!window) {
     return tl::unexpected(Error{"window_creation_failed", "failed to create NSWindow"});
   }
@@ -274,6 +284,7 @@ Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
     [window setOpaque:NO];
     [window setBackgroundColor:[NSColor clearColor]];
     [webview setValue:@NO forKey:@"drawsBackground"];
+    [window setAcceptsMouseMovedEvents:YES];
   }
   [[window contentView] addSubview:webview];
   [bootstrap release];
