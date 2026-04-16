@@ -1,0 +1,25 @@
+src/host/macos/macos_window_host.h
+  09b0d74280706126 82
+src/host/macos/macos_window_host.mm
+  09b0d74280706126 61-78,470-471
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "c1dae26f26ca7b93a52d03ae2591eaeef34d9913",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 23,
+      "total_deletions": 1,
+      "accepted_lines": 23,
+      "overriden_lines": 0
+    }
+  }
+}
