@@ -165,6 +165,7 @@ LRESULT CALLBACK Win32WindowHost::WindowProc(HWND hwnd, UINT message, WPARAM wpa
   if (message == WM_SIZE && self->webview_host_) {
     auto rect = self->client_rect();
     (void)self->webview_host_->set_bounds(rect);
+    self->update_shape();
   }
 
   return DefWindowProcW(hwnd, message, wparam, lparam);
@@ -281,6 +282,7 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
 
   ShowWindow(host->hwnd_, SW_SHOW);
   UpdateWindow(host->hwnd_);
+  host->update_shape();
 
   auto attach_result = host->webview_host_->attach(host->hwnd_, options);
   if (!attach_result) {
@@ -338,6 +340,21 @@ void Win32WindowHost::update_style() {
   SetWindowPos(hwnd_, always_on_top_ ? HWND_TOPMOST : HWND_NOTOPMOST,
       0, 0, 0, 0,
       SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+}
+
+void Win32WindowHost::update_shape() {
+  if (!hwnd_ || !borderless_) {
+    return;
+  }
+  RECT rect{};
+  GetWindowRect(hwnd_, &rect);
+  auto width = rect.right - rect.left;
+  auto height = rect.bottom - rect.top;
+  if (width <= 0 || height <= 0) {
+    return;
+  }
+  HRGN region = CreateRoundRectRgn(0, 0, width, height, 16, 16);
+  SetWindowRgn(hwnd_, region, TRUE);
 }
 
 RECT Win32WindowHost::client_rect() const {

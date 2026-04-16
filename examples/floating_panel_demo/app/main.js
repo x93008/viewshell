@@ -49,10 +49,18 @@
     scheduleCollapse();
   });
 
+  document.body.addEventListener('mouseleave', function () {
+    scheduleCollapse();
+  });
+
   document.addEventListener('mouseout', function (event) {
     if (!event.relatedTarget) {
       scheduleCollapse();
     }
+  });
+
+  window.addEventListener('blur', function () {
+    scheduleCollapse();
   });
 
   shell.addEventListener('mousedown', function (event) {
