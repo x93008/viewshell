@@ -1,0 +1,23 @@
+src/host/macos/macos_window_host.mm
+  09b0d74280706126 234,413-447
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.1",
+  "base_commit_sha": "2a7b3e687c62163d4b54156bf54f9883e2d73424",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 36,
+      "total_deletions": 2,
+      "accepted_lines": 36,
+      "overriden_lines": 0
+    }
+  }
+}
