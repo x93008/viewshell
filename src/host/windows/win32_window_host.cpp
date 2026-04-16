@@ -419,6 +419,10 @@ Result<void> Win32WindowHost::set_geometry(Geometry geometry) {
   size_ = {geometry.width, geometry.height};
   SetWindowPos(hwnd_, nullptr, geometry.x, geometry.y, geometry.width, geometry.height,
       SWP_NOZORDER | SWP_NOACTIVATE);
+  if (webview_host_) {
+    (void)webview_host_->set_bounds(client_rect());
+  }
+  InvalidateRect(hwnd_, nullptr, TRUE);
   return {};
 }
 
@@ -433,6 +437,10 @@ Result<void> Win32WindowHost::set_size(Size size) {
   if (auto result = ensure_window(); !result) return result;
   size_ = size;
   SetWindowPos(hwnd_, nullptr, 0, 0, size.width, size.height, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+  if (webview_host_) {
+    (void)webview_host_->set_bounds(client_rect());
+  }
+  InvalidateRect(hwnd_, nullptr, TRUE);
   return {};
 }
 
@@ -447,6 +455,9 @@ Result<void> Win32WindowHost::set_position(Position pos) {
   if (auto result = ensure_window(); !result) return result;
   position_ = pos;
   SetWindowPos(hwnd_, nullptr, pos.x, pos.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+  if (webview_host_) {
+    (void)webview_host_->set_bounds(client_rect());
+  }
   return {};
 }
 
