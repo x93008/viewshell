@@ -21,11 +21,10 @@ public:
   Result<void> post(std::shared_ptr<RuntimeAppState> app_state,
       std::function<void()> task) override;
 
-  Result<int> run(std::shared_ptr<RuntimeAppState> app_state,
-      std::shared_ptr<RuntimeWindowState> window_state) override;
+  Result<int> run(std::shared_ptr<RuntimeAppState> app_state) override;
 
 private:
-  std::shared_ptr<Win32WindowHost> active_host_;
+  std::vector<std::shared_ptr<Win32WindowHost>> active_hosts_;
 };
 
 } // namespace viewshell

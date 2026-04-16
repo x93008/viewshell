@@ -13,6 +13,15 @@ namespace viewshell {
 
 namespace {
 
+bool all_windows_closed(const std::shared_ptr<RuntimeAppState>& app_state) {
+  for (const auto& window : app_state->windows) {
+    if (window && !window->is_closed) {
+      return false;
+    }
+  }
+  return true;
+}
+
 std::wstring to_wstring(std::string_view value) {
   if (value.empty()) {
     return {};
@@ -134,18 +143,22 @@ LRESULT CALLBACK Win32WindowHost::WindowProc(HWND hwnd, UINT message, WPARAM wpa
 
   if (message == WM_CLOSE) {
     if (auto app = self->app_state_.lock()) {
-      app->shutdown_started = true;
-      app->run_exit_code = 0;
-    }
-    if (auto window = self->window_state_.lock()) {
-      window->is_closed = true;
+      if (auto window = self->window_state_.lock()) {
+        window->is_closed = true;
+      }
+      if (all_windows_closed(app)) {
+        app->shutdown_started = true;
+        app->run_exit_code = 0;
+      }
     }
     DestroyWindow(hwnd);
     return 0;
   }
 
   if (message == WM_DESTROY) {
-    PostQuitMessage(0);
+    if (auto app = self->app_state_.lock(); app && app->shutdown_started) {
+      PostQuitMessage(0);
+    }
     return 0;
   }
 
@@ -169,6 +182,8 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
   host->position_ = {options.x.value_or(CW_USEDEFAULT), options.y.value_or(CW_USEDEFAULT)};
   host->borderless_ = options.borderless;
   host->always_on_top_ = options.always_on_top;
+  host->show_in_taskbar_ = options.show_in_taskbar;
+  host->resizable_ = options.resizable;
   host->webview_host_ = std::make_unique<Win32WebviewHost>();
   host->invoke_bus_ = std::make_unique<InvokeBus>();
   host->webview_host_->set_transparent_background(options.borderless);
@@ -232,13 +247,23 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
   wc.hCursor = LoadCursorW(nullptr, MAKEINTRESOURCEW(IDC_ARROW));
   RegisterClassW(&wc);
 
-  DWORD style = WS_OVERLAPPEDWINDOW;
-  if (host->borderless_) {
-    style = WS_POPUP;
+  DWORD style = host->borderless_ ? WS_POPUP : WS_OVERLAPPEDWINDOW;
+  if (!host->resizable_) {
+    style &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX);
+  }
+
+  DWORD ex_style = 0;
+  if (host->always_on_top_) {
+    ex_style |= WS_EX_TOPMOST;
+  }
+  if (!host->show_in_taskbar_) {
+    ex_style |= WS_EX_TOOLWINDOW;
+  } else {
+    ex_style |= WS_EX_APPWINDOW;
   }
 
   host->hwnd_ = CreateWindowExW(
-      host->always_on_top_ ? WS_EX_TOPMOST : 0,
+      ex_style,
       class_name,
       L"Viewshell",
       style,
@@ -301,7 +326,17 @@ void Win32WindowHost::update_style() {
   }
 
   LONG_PTR style = borderless_ ? WS_POPUP : WS_OVERLAPPEDWINDOW;
+  if (!resizable_) {
+    style &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX);
+  }
   SetWindowLongPtrW(hwnd_, GWL_STYLE, style);
+  LONG_PTR ex_style = always_on_top_ ? WS_EX_TOPMOST : 0;
+  if (!show_in_taskbar_) {
+    ex_style |= WS_EX_TOOLWINDOW;
+  } else {
+    ex_style |= WS_EX_APPWINDOW;
+  }
+  SetWindowLongPtrW(hwnd_, GWL_EXSTYLE, ex_style);
   SetWindowPos(hwnd_, always_on_top_ ? HWND_TOPMOST : HWND_NOTOPMOST,
       0, 0, 0, 0,
       SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_SHOWWINDOW);

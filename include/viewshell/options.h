@@ -22,6 +22,8 @@ struct WindowOptions {
   std::optional<int> y;
   bool borderless = false;
   bool always_on_top = false;
+   bool show_in_taskbar = true;
+   bool resizable = true;
 };
 
 struct NormalizedAppOptions {

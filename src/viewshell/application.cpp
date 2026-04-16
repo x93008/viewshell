@@ -8,20 +8,17 @@ namespace viewshell {
 Application::Application(NormalizedAppOptions opts)
     : opts_(std::move(opts)),
       app_state_(std::make_shared<RuntimeAppState>()),
-      window_state_(std::make_shared<RuntimeWindowState>()),
       backend_runtime_(BackendFactory::create()) {}
 
 Application::Application(Application&& other) noexcept
     : opts_(std::move(other.opts_)),
       app_state_(std::move(other.app_state_)),
-      window_state_(std::move(other.window_state_)),
       backend_runtime_(std::move(other.backend_runtime_)) {}
 
 Application& Application::operator=(Application&& other) noexcept {
   if (this != &other) {
     opts_ = std::move(other.opts_);
     app_state_ = std::move(other.app_state_);
-    window_state_ = std::move(other.window_state_);
     backend_runtime_ = std::move(other.backend_runtime_);
   }
   return *this;
@@ -38,15 +35,6 @@ Result<Application> Application::create(const AppOptions& options) {
 }
 
 Result<WindowHandle> Application::create_window(const WindowOptions& options) {
-  if (app_state_->run_started && window_state_->has_window) {
-    return tl::unexpected(Error{"multiple_windows_unsupported",
-        "only one window is supported in the first release"});
-  }
-  if (window_state_->has_window) {
-    return tl::unexpected(Error{"multiple_windows_unsupported",
-        "only one window is supported in the first release"});
-  }
-
   if (!backend_runtime_) {
     backend_runtime_ = BackendFactory::create();
   }
@@ -55,14 +43,15 @@ Result<WindowHandle> Application::create_window(const WindowOptions& options) {
         "backend runtime is not available"});
   }
 
-  auto host = backend_runtime_->create_window(app_state_, window_state_, opts_, options);
+  auto window_state = std::make_shared<RuntimeWindowState>();
+  auto host = backend_runtime_->create_window(app_state_, window_state, opts_, options);
   if (!host) {
     return tl::unexpected(host.error());
   }
 
-  window_state_->window_host = std::move(*host);
-  window_state_->has_window = true;
-  return WindowHandle(window_state_);
+  window_state->window_host = std::move(*host);
+  app_state_->windows.push_back(window_state);
+  return WindowHandle(window_state);
 }
 
 Result<void> Application::post(std::function<void()> task) {
@@ -78,7 +67,11 @@ Result<int> Application::run() {
     return tl::unexpected(Error{"invalid_state",
         "a window must be created before run"});
   }
-  return backend_runtime_->run(app_state_, window_state_);
+  if (app_state_->windows.empty()) {
+    return tl::unexpected(Error{"invalid_state",
+        "a window must be created before run"});
+  }
+  return backend_runtime_->run(app_state_);
 }
 
 } // namespace viewshell

@@ -20,8 +20,8 @@ Result<std::shared_ptr<WindowHost>> Win32BackendRuntime::create_window(
     return tl::unexpected(host.error());
   }
 
-  active_host_ = *host;
-  return std::static_pointer_cast<WindowHost>(active_host_);
+  active_hosts_.push_back(*host);
+  return std::static_pointer_cast<WindowHost>(*host);
 }
 
 Result<void> Win32BackendRuntime::post(std::shared_ptr<RuntimeAppState> app_state,
@@ -39,9 +39,8 @@ Result<void> Win32BackendRuntime::post(std::shared_ptr<RuntimeAppState> app_stat
   return {};
 }
 
-Result<int> Win32BackendRuntime::run(std::shared_ptr<RuntimeAppState> app_state,
-    std::shared_ptr<RuntimeWindowState> window_state) {
-  if (!window_state->has_window || !active_host_) {
+Result<int> Win32BackendRuntime::run(std::shared_ptr<RuntimeAppState> app_state) {
+  if (app_state->windows.empty() || active_hosts_.empty()) {
     return tl::unexpected(Error{"invalid_state",
         "a window must be created before run"});
   }
@@ -50,7 +49,7 @@ Result<int> Win32BackendRuntime::run(std::shared_ptr<RuntimeAppState> app_state,
   }
 
   app_state->run_started = true;
-  active_host_->run_message_loop();
+  active_hosts_.front()->run_message_loop();
   return app_state->run_exit_code;
 }
 

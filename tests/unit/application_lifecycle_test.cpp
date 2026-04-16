@@ -14,15 +14,15 @@ bool HasBackendRuntimeForTest(const Application& app) {
 }
 
 bool HasWindowHostForTest(const Application& app) {
-  return static_cast<bool>(app.window_state_) &&
-      static_cast<bool>(app.window_state_->window_host);
+  return !app.app_state_->windows.empty() &&
+      static_cast<bool>(app.app_state_->windows.front()->window_host);
 }
 
 bool WindowCapabilitiesAvailableForTest(const Application& app) {
-  if (!app.window_state_ || !app.window_state_->window_host) {
+  if (app.app_state_->windows.empty() || !app.app_state_->windows.front()->window_host) {
     return false;
   }
-  auto caps = app.window_state_->window_host->capabilities();
+  auto caps = app.app_state_->windows.front()->window_host->capabilities();
   return static_cast<bool>(caps);
 }
 

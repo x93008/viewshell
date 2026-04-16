@@ -178,6 +178,15 @@ constexpr const char* kMacBridgeBootstrap = R"JS((function () {
   };
 })();)JS";
 
+bool all_windows_closed(const std::shared_ptr<RuntimeAppState>& app_state) {
+  for (const auto& window : app_state->windows) {
+    if (window && !window->is_closed) {
+      return false;
+    }
+  }
+  return true;
+}
+
 } // namespace
 
 MacOSWindowHost::MacOSWindowHost(std::shared_ptr<RuntimeAppState> app_state,
@@ -354,14 +363,16 @@ Result<void> MacOSWindowHost::set_always_on_top(bool enabled) { always_on_top_ =
 Result<void> MacOSWindowHost::close() {
   if (auto r = ensure_window(); !r) return r;
   if (auto app = app_state_.lock()) {
-    app->shutdown_started = true;
-    app->run_exit_code = 0;
-  }
-  if (auto state = window_state_.lock()) {
-    state->is_closed = true;
+    if (auto state = window_state_.lock()) {
+      state->is_closed = true;
+    }
+    if (all_windows_closed(app)) {
+      app->shutdown_started = true;
+      app->run_exit_code = 0;
+      [NSApp stop:nil];
+    }
   }
   [(NSWindow*)window_ orderOut:nil];
-  [NSApp stop:nil];
   return {};
 }
 

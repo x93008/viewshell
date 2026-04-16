@@ -12,6 +12,19 @@
 
 namespace viewshell {
 
+namespace {
+
+bool all_windows_closed(const std::shared_ptr<RuntimeAppState>& app_state) {
+  for (const auto& window : app_state->windows) {
+    if (window && !window->is_closed) {
+      return false;
+    }
+  }
+  return true;
+}
+
+} // namespace
+
 X11WindowHost::X11WindowHost(std::shared_ptr<RuntimeAppState> app_state,
     std::shared_ptr<RuntimeWindowState> window_state)
     : app_state_(std::move(app_state)),
@@ -37,13 +50,15 @@ Result<std::shared_ptr<X11WindowHost>> X11WindowHost::create(
                                        window_state = weak_window_state,
                                        driver = host->window_driver_.get()]() {
     if (auto app = app_state.lock()) {
-      app->shutdown_started = true;
-      app->run_exit_code = 0;
+      if (auto window = window_state.lock()) {
+        window->is_closed = true;
+      }
+      if (all_windows_closed(app)) {
+        app->shutdown_started = true;
+        app->run_exit_code = 0;
+        driver->quit_main_loop();
+      }
     }
-    if (auto window = window_state.lock()) {
-      window->is_closed = true;
-    }
-    driver->quit_main_loop();
   };
 
   auto native = host->window_driver_->create(options);

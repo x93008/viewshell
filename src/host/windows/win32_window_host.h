@@ -74,6 +74,8 @@ private:
   HWND hwnd_ = nullptr;
   bool borderless_ = false;
   bool always_on_top_ = false;
+  bool show_in_taskbar_ = true;
+  bool resizable_ = true;
   Size size_{};
   Position position_{};
 };
