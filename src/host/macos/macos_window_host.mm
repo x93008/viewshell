@@ -231,6 +231,7 @@ Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
   }
 
   WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
+  [[configuration preferences] setValue:@YES forKey:@"developerExtrasEnabled"];
   WKUserContentController* user_content = [[WKUserContentController alloc] init];
   ViewshellWebMessageHandler* message_handler = [[ViewshellWebMessageHandler alloc] init];
   ViewshellNavigationDelegate* navigation_delegate = [[ViewshellNavigationDelegate alloc] init];
@@ -409,8 +410,41 @@ Result<void> MacOSWindowHost::add_init_script(std::string_view script) {
 
   return {};
 }
-Result<void> MacOSWindowHost::open_devtools() { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
-Result<void> MacOSWindowHost::close_devtools() { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
+Result<void> MacOSWindowHost::open_devtools() {
+  if (auto r = ensure_window(); !r) return r;
+  if (!webview_) return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()});
+
+  id webview = (WKWebView*)webview_;
+  if (![webview respondsToSelector:NSSelectorFromString(@"_inspector")]) {
+    return tl::unexpected(Error{"unsupported_by_backend", "WKWebView inspector API is unavailable"});
+  }
+  id inspector = [webview performSelector:NSSelectorFromString(@"_inspector")];
+  if (inspector && [inspector respondsToSelector:NSSelectorFromString(@"show")]) {
+    [inspector performSelector:NSSelectorFromString(@"show")];
+    return {};
+  }
+  return tl::unexpected(Error{"unsupported_by_backend", "WKWebView inspector show API is unavailable"});
+}
+
+Result<void> MacOSWindowHost::close_devtools() {
+  if (auto r = ensure_window(); !r) return r;
+  if (!webview_) return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()});
+
+  id webview = (WKWebView*)webview_;
+  if (![webview respondsToSelector:NSSelectorFromString(@"_inspector")]) {
+    return tl::unexpected(Error{"unsupported_by_backend", "WKWebView inspector API is unavailable"});
+  }
+  id inspector = [webview performSelector:NSSelectorFromString(@"_inspector")];
+  if (inspector && [inspector respondsToSelector:NSSelectorFromString(@"close")]) {
+    [inspector performSelector:NSSelectorFromString(@"close")];
+    return {};
+  }
+  if (inspector && [inspector respondsToSelector:NSSelectorFromString(@"hide")]) {
+    [inspector performSelector:NSSelectorFromString(@"hide")];
+    return {};
+  }
+  return tl::unexpected(Error{"unsupported_by_backend", "WKWebView inspector close API is unavailable"});
+}
 Result<void> MacOSWindowHost::on_page_load(PageLoadHandler handler) {
   page_load_handlers_.push_back(std::move(handler));
   return {};
