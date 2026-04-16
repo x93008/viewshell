@@ -9,6 +9,7 @@
 
 struct DemoState {
   viewshell::WindowHandle floating_window;
+  viewshell::WindowHandle main_window;
   bool floating_visible = false;
 };
 
@@ -67,7 +68,7 @@ int main(int argc, char* argv[]) {
   main_window->set_title("Floating Demo Control");
   main_window->add_init_script("window.__demoRole='main';");
 
-  auto shared = std::make_shared<DemoState>(DemoState{*floating, false});
+  auto shared = std::make_shared<DemoState>(DemoState{*floating, *main_window, false});
 
   auto main_bridge = main_window->bridge();
   if (main_bridge) {
@@ -84,6 +85,13 @@ int main(int argc, char* argv[]) {
           if (!hide_result) return tl::unexpected(hide_result.error());
         }
         return viewshell::Json{{"visible", shared->floating_visible}};
+      });
+
+    main_bridge->register_command("demo.quit",
+      [shared](const viewshell::Json&) -> viewshell::Result<viewshell::Json> {
+        (void)shared->floating_window.close();
+        (void)shared->main_window.close();
+        return viewshell::Json{{"ok", true}};
       });
   }
 

@@ -3,10 +3,15 @@
 
   if (role === 'main') {
     document.body.className = 'main';
-    document.body.innerHTML = '<div class="main-shell"><button id="toggleFloating">Toggle Floating Window</button></div>';
+    document.body.innerHTML = '<div class="main-shell"><button id="toggleFloating">Toggle Floating Window</button> <button id="quitBtn" class="quit">Quit</button></div>';
     document.getElementById('toggleFloating').addEventListener('click', function () {
       if (window.__viewshell) {
         window.__viewshell.invoke('demo.toggleFloating', {});
+      }
+    });
+    document.getElementById('quitBtn').addEventListener('click', function () {
+      if (window.__viewshell) {
+        window.__viewshell.invoke('demo.quit', {});
       }
     });
     return;
