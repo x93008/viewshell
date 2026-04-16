@@ -22,6 +22,8 @@ public:
   Result<void> show();
   Result<void> hide();
   Result<void> focus();
+  Result<void> set_geometry(Geometry geometry);
+  Result<Geometry> get_geometry() const;
   Result<void> set_size(Size size);
   Result<Size> get_size() const;
   Result<void> set_position(Position position);

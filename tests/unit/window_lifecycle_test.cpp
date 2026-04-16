@@ -26,6 +26,13 @@ public:
   viewshell::Result<void> show() override { return {}; }
   viewshell::Result<void> hide() override { return {}; }
   viewshell::Result<void> focus() override { return {}; }
+  viewshell::Result<void> set_geometry(viewshell::Geometry geometry) override {
+    last_geometry = geometry;
+    return {};
+  }
+  viewshell::Result<viewshell::Geometry> get_geometry() const override {
+    return last_geometry;
+  }
   viewshell::Result<void> set_size(viewshell::Size) override { return {}; }
   viewshell::Result<viewshell::Size> get_size() const override {
     return viewshell::Size{640, 480};
@@ -102,6 +109,7 @@ public:
   std::string last_script;
   std::string last_event_name;
   viewshell::Json last_event_payload;
+  viewshell::Geometry last_geometry{10, 20, 640, 480};
   std::vector<std::string> init_scripts;
   viewshell::PageLoadHandler page_load_handler;
   viewshell::NavigationHandler navigation_handler;
@@ -133,6 +141,24 @@ TEST(WindowHandleLifecycle, delegates_window_ops_to_window_host) {
   ASSERT_TRUE(handle.set_title("Delegated title"));
 
   EXPECT_EQ(host->last_title, "Delegated title");
+}
+
+TEST(WindowHandleLifecycle, delegates_geometry_ops_to_window_host) {
+  auto state = std::make_shared<viewshell::RuntimeWindowState>();
+  auto host = std::make_shared<RecordingWindowHost>();
+  state->window_host = host;
+
+  viewshell::WindowHandle handle(state);
+  ASSERT_TRUE(handle.set_geometry({30, 40, 100, 50}));
+  auto geometry = handle.get_geometry();
+
+  ASSERT_TRUE(geometry);
+  EXPECT_EQ(host->last_geometry.x, 30);
+  EXPECT_EQ(host->last_geometry.y, 40);
+  EXPECT_EQ(host->last_geometry.width, 100);
+  EXPECT_EQ(host->last_geometry.height, 50);
+  EXPECT_EQ(geometry->width, 100);
+  EXPECT_EQ(geometry->height, 50);
 }
 
 TEST(WindowHandleLifecycle, delegates_webview_ops_to_window_host) {

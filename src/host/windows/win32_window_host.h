@@ -36,6 +36,8 @@ public:
   Result<void> show() override;
   Result<void> hide() override;
   Result<void> focus() override;
+  Result<void> set_geometry(Geometry geometry) override;
+  Result<Geometry> get_geometry() const override;
   Result<void> set_size(Size size) override;
   Result<Size> get_size() const override;
   Result<void> set_position(Position pos) override;

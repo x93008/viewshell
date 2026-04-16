@@ -327,6 +327,19 @@ Result<void> MacOSWindowHost::show() { if (auto r=ensure_window(); !r) return r;
 Result<void> MacOSWindowHost::hide() { if (auto r=ensure_window(); !r) return r; [(NSWindow*)window_ orderOut:nil]; return {}; }
 Result<void> MacOSWindowHost::focus() { if (auto r=ensure_window(); !r) return r; [(NSWindow*)window_ makeKeyAndOrderFront:nil]; [NSApp activateIgnoringOtherApps:YES]; return {}; }
 
+Result<void> MacOSWindowHost::set_geometry(Geometry geometry) {
+  if (auto r = ensure_window(); !r) return r;
+  NSRect frame = NSMakeRect(geometry.x, geometry.y, geometry.width, geometry.height);
+  [(NSWindow*)window_ setFrame:frame display:YES];
+  return {};
+}
+
+Result<Geometry> MacOSWindowHost::get_geometry() const {
+  if (auto r = ensure_window(); !r) return tl::unexpected(r.error());
+  NSRect frame = [(NSWindow*)window_ frame];
+  return Geometry{static_cast<int>(frame.origin.x), static_cast<int>(frame.origin.y), static_cast<int>(frame.size.width), static_cast<int>(frame.size.height)};
+}
+
 Result<void> MacOSWindowHost::set_size(Size size) {
   if (auto r = ensure_window(); !r) return r;
   NSWindow* window = (NSWindow*)window_;

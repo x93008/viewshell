@@ -398,6 +398,22 @@ Result<void> Win32WindowHost::focus() {
   return {};
 }
 
+Result<void> Win32WindowHost::set_geometry(Geometry geometry) {
+  if (auto result = ensure_window(); !result) return result;
+  position_ = {geometry.x, geometry.y};
+  size_ = {geometry.width, geometry.height};
+  SetWindowPos(hwnd_, nullptr, geometry.x, geometry.y, geometry.width, geometry.height,
+      SWP_NOZORDER | SWP_NOACTIVATE);
+  return {};
+}
+
+Result<Geometry> Win32WindowHost::get_geometry() const {
+  if (auto result = ensure_window(); !result) return tl::unexpected(result.error());
+  RECT rect{};
+  GetWindowRect(hwnd_, &rect);
+  return Geometry{rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top};
+}
+
 Result<void> Win32WindowHost::set_size(Size size) {
   if (auto result = ensure_window(); !result) return result;
   size_ = size;

@@ -19,6 +19,8 @@ public:
   virtual Result<void> show() = 0;
   virtual Result<void> hide() = 0;
   virtual Result<void> focus() = 0;
+  virtual Result<void> set_geometry(Geometry geometry) = 0;
+  virtual Result<Geometry> get_geometry() const = 0;
   virtual Result<void> set_size(Size size) = 0;
   virtual Result<Size> get_size() const = 0;
   virtual Result<void> set_position(Position pos) = 0;

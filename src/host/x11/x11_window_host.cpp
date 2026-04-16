@@ -182,6 +182,20 @@ Result<void> X11WindowHost::focus() {
   return window_driver_->focus();
 }
 
+Result<void> X11WindowHost::set_geometry(Geometry geometry) {
+  auto pos_result = set_position(Position{geometry.x, geometry.y});
+  if (!pos_result) return tl::unexpected(pos_result.error());
+  return set_size(Size{geometry.width, geometry.height});
+}
+
+Result<Geometry> X11WindowHost::get_geometry() const {
+  auto pos = get_position();
+  if (!pos) return tl::unexpected(pos.error());
+  auto size = get_size();
+  if (!size) return tl::unexpected(size.error());
+  return Geometry{pos->x, pos->y, size->width, size->height};
+}
+
 Result<void> X11WindowHost::set_size(Size size) {
   return window_driver_->set_size(size);
 }
