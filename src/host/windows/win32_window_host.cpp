@@ -2,8 +2,11 @@
 
 #include "win32_window_host.h"
 
+#include <dwmapi.h>
 #include <nlohmann/json.hpp>
 #include <string>
+
+#pragma comment(lib, "dwmapi.lib")
 
 #include "bridge/invoke_bus.h"
 #include "webview/win32_webview_host.h"
@@ -166,6 +169,14 @@ LRESULT CALLBACK Win32WindowHost::WindowProc(HWND hwnd, UINT message, WPARAM wpa
     return 1;
   }
 
+  if (message == WM_PAINT && self->borderless_) {
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(hwnd, &ps);
+    FillRect(hdc, &ps.rcPaint, static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH)));
+    EndPaint(hwnd, &ps);
+    return 0;
+  }
+
   if (message == WM_SIZE && self->webview_host_) {
     auto rect = self->client_rect();
     (void)self->webview_host_->set_bounds(rect);
@@ -300,6 +311,11 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
 
   ShowWindow(host->hwnd_, SW_SHOW);
   UpdateWindow(host->hwnd_);
+
+  if (host->borderless_) {
+    MARGINS margins = {-1, -1, -1, -1};
+    DwmExtendFrameIntoClientArea(host->hwnd_, &margins);
+  }
 
   auto attach_result = host->webview_host_->attach(host->hwnd_, options);
   if (!attach_result) {
