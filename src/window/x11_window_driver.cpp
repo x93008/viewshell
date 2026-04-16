@@ -69,6 +69,10 @@ Result<NativeWindowHandle> WindowDriver::create(const WindowOptions& options) {
     gtk_window_set_keep_above(GTK_WINDOW(gtk_window_), TRUE);
   }
 
+  if (!options.show_in_taskbar) {
+    gtk_window_set_skip_taskbar_hint(GTK_WINDOW(gtk_window_), TRUE);
+  }
+
   g_signal_connect(gtk_window_, "destroy", G_CALLBACK(on_gtk_destroy), this);
   g_signal_connect(gtk_window_, "configure-event", G_CALLBACK(on_gtk_configure), this);
   g_signal_connect(gtk_window_, "focus-in-event", G_CALLBACK(on_gtk_focus), this);

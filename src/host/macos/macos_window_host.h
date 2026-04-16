@@ -85,6 +85,7 @@ private:
   NavigationHandler navigation_handler_;
   bool borderless_ = false;
   bool always_on_top_ = false;
+  bool show_in_taskbar_ = true;
 };
 
 } // namespace viewshell

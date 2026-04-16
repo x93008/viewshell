@@ -234,6 +234,7 @@ Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
       new MacOSWindowHost(std::move(app_state), std::move(window_state)));
   host->borderless_ = options.borderless;
   host->always_on_top_ = options.always_on_top;
+  host->show_in_taskbar_ = options.show_in_taskbar;
   host->invoke_bus_ = std::make_unique<InvokeBus>();
 
   NSRect rect = NSMakeRect(options.x.value_or(100), options.y.value_or(100), options.width, options.height);
@@ -249,6 +250,10 @@ Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
   [window makeKeyAndOrderFront:nil];
   if (host->always_on_top_) {
     [window setLevel:NSFloatingWindowLevel];
+  }
+
+  if (!host->show_in_taskbar_) {
+    [window setCollectionBehavior:([window collectionBehavior] | NSWindowCollectionBehaviorTransient)];
   }
 
   WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
