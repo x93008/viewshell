@@ -418,11 +418,11 @@ Result<void> Win32WindowHost::set_geometry(Geometry geometry) {
   position_ = {geometry.x, geometry.y};
   size_ = {geometry.width, geometry.height};
   SetWindowPos(hwnd_, nullptr, geometry.x, geometry.y, geometry.width, geometry.height,
-      SWP_NOZORDER | SWP_NOACTIVATE);
+      SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOOWNERZORDER);
   if (webview_host_) {
     (void)webview_host_->set_bounds(client_rect());
   }
-  InvalidateRect(hwnd_, nullptr, TRUE);
+  RedrawWindow(hwnd_, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW);
   return {};
 }
 
