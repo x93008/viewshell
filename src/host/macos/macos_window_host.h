@@ -60,6 +60,7 @@ public:
   void dispatch_json_to_page(const Json& payload);
   void begin_drag();
   void notify_page_load(std::string url, std::string stage, std::optional<std::string> error_code);
+  bool should_allow_navigation(std::string_view url) const;
 
 private:
   MacOSWindowHost(std::shared_ptr<RuntimeAppState> app_state,

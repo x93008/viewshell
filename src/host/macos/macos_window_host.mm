@@ -64,16 +64,10 @@ namespace viewshell { class MacOSWindowHost; }
     return;
   }
 
-  if (!self.host->navigation_handler_) {
-    decisionHandler(WKNavigationActionPolicyAllow);
-    return;
-  }
-
   NSURL* url = navigationAction.request.URL;
   NSString* absolute = url ? url.absoluteString : @"";
-  viewshell::NavigationRequest request{std::string([absolute UTF8String])};
-  auto decision = self.host->navigation_handler_(request);
-  decisionHandler(decision == viewshell::NavigationDecision::Allow ? WKNavigationActionPolicyAllow : WKNavigationActionPolicyCancel);
+  std::string request_url([absolute UTF8String]);
+  decisionHandler(self.host->should_allow_navigation(request_url) ? WKNavigationActionPolicyAllow : WKNavigationActionPolicyCancel);
 }
 
 - (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation {
@@ -555,6 +549,14 @@ void MacOSWindowHost::notify_page_load(std::string url, std::string stage, std::
   for (auto& handler : page_load_handlers_) {
     handler(event);
   }
+}
+
+bool MacOSWindowHost::should_allow_navigation(std::string_view url) const {
+  if (!navigation_handler_) {
+    return true;
+  }
+  NavigationRequest request{std::string(url)};
+  return navigation_handler_(request) == NavigationDecision::Allow;
 }
 
 Result<Capabilities> MacOSWindowHost::capabilities() const {
