@@ -562,7 +562,10 @@ bool MacOSWindowHost::should_allow_navigation(std::string_view url) const {
 Result<Capabilities> MacOSWindowHost::capabilities() const {
   Capabilities caps;
   caps.window.borderless = true;
+  caps.window.transparent = true;
   caps.window.always_on_top = true;
+  caps.window.native_drag = true;
+  caps.webview.devtools = true;
   caps.webview.script_eval = true;
   caps.bridge.invoke = true;
   caps.bridge.native_events = true;

@@ -473,7 +473,9 @@ Result<void> Win32WindowHost::emit(std::string name, const Json& payload) {
 Result<Capabilities> Win32WindowHost::capabilities() const {
   Capabilities caps;
   caps.window.borderless = true;
+  caps.window.transparent = true;
   caps.window.always_on_top = true;
+  caps.window.native_drag = true;
   caps.webview.devtools = true;
   caps.webview.script_eval = true;
   caps.bridge.invoke = true;
