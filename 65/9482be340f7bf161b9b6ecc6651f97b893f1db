@@ -1,0 +1,27 @@
+src/host/windows/win32_window_host.cpp
+  09b0d74280706126 168,285,345-357
+src/host/windows/win32_window_host.h
+  09b0d74280706126 69
+examples/floating_panel_demo/app/main.js
+  09b0d74280706126 52-55,62-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "659482be340f7bf161b9b6ecc6651f97b893f1db",
+  "prompts": {
+    "09b0d74280706126": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28e8b33eaffeAaq5f5IsNU2eSW",
+        "model": "cchGPT/gpt-5.4"
+      },
+      "human_author": "x93008",
+      "messages": [],
+      "total_additions": 26,
+      "total_deletions": 0,
+      "accepted_lines": 26,
+      "overriden_lines": 0
+    }
+  }
+}
