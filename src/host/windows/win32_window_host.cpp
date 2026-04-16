@@ -417,8 +417,7 @@ Result<void> Win32WindowHost::set_geometry(Geometry geometry) {
   if (auto result = ensure_window(); !result) return result;
   position_ = {geometry.x, geometry.y};
   size_ = {geometry.width, geometry.height};
-  SetWindowPos(hwnd_, nullptr, geometry.x, geometry.y, geometry.width, geometry.height,
-      SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOOWNERZORDER);
+  MoveWindow(hwnd_, geometry.x, geometry.y, geometry.width, geometry.height, TRUE);
   if (webview_host_) {
     (void)webview_host_->set_bounds(client_rect());
   }
