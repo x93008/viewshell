@@ -1,2 +1,3 @@
 add_subdirectory(hello_viewshell)
 add_subdirectory(circle_window)
+add_subdirectory(floating_panel_demo)
