@@ -56,7 +56,20 @@ std::string resolve_example_asset_path(const char* argv0, const char* entry_file
   if (file_exists(candidate)) {
     return candidate;
   }
-  return join_paths(join_paths(dirname_copy(exe_dir), "app"), entry_file);
+
+  candidate = join_paths(join_paths(dirname_copy(exe_dir), "app"), entry_file);
+  if (file_exists(candidate)) {
+    return candidate;
+  }
+
+#ifdef EXAMPLE_SOURCE_APP_DIR
+  candidate = join_paths(EXAMPLE_SOURCE_APP_DIR, entry_file);
+  if (file_exists(candidate)) {
+    return candidate;
+  }
+#endif
+
+  return candidate;
 }
 
 #else
@@ -68,6 +81,13 @@ std::string resolve_example_asset_path(const char* argv0, const char* entry_file
   if (!std::filesystem::exists(asset_path)) {
     asset_path = exe_dir.parent_path() / "app" / entry_file;
   }
+
+#ifdef EXAMPLE_SOURCE_APP_DIR
+  if (!std::filesystem::exists(asset_path)) {
+    asset_path = std::filesystem::path(EXAMPLE_SOURCE_APP_DIR) / entry_file;
+  }
+#endif
+
   return asset_path.string();
 }
 

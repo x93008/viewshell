@@ -58,6 +58,18 @@ namespace viewshell { class MacOSWindowHost; }
 
 @implementation ViewshellNavigationDelegate
 
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
+  if (!self.host) {
+    decisionHandler(WKNavigationActionPolicyAllow);
+    return;
+  }
+
+  NSURL* url = navigationAction.request.URL;
+  NSString* absolute = url ? url.absoluteString : @"";
+  std::string request_url([absolute UTF8String]);
+  decisionHandler(self.host->should_allow_navigation(request_url) ? WKNavigationActionPolicyAllow : WKNavigationActionPolicyCancel);
+}
+
 - (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation {
   if (!self.host) {
     return;
@@ -449,7 +461,10 @@ Result<void> MacOSWindowHost::on_page_load(PageLoadHandler handler) {
   page_load_handlers_.push_back(std::move(handler));
   return {};
 }
-Result<void> MacOSWindowHost::set_navigation_handler(NavigationHandler) { return tl::unexpected(Error{"unsupported_by_backend", unsupported_webview_message()}); }
+Result<void> MacOSWindowHost::set_navigation_handler(NavigationHandler handler) {
+  navigation_handler_ = std::move(handler);
+  return {};
+}
 Result<void> MacOSWindowHost::register_command(std::string name, CommandHandler handler) { return invoke_bus_->register_command(std::move(name), std::move(handler)); }
 
 Result<void> MacOSWindowHost::emit(std::string name, const Json& payload) {
@@ -534,6 +549,14 @@ void MacOSWindowHost::notify_page_load(std::string url, std::string stage, std::
   for (auto& handler : page_load_handlers_) {
     handler(event);
   }
+}
+
+bool MacOSWindowHost::should_allow_navigation(std::string_view url) const {
+  if (!navigation_handler_) {
+    return true;
+  }
+  NavigationRequest request{std::string(url)};
+  return navigation_handler_(request) == NavigationDecision::Allow;
 }
 
 Result<Capabilities> MacOSWindowHost::capabilities() const {
