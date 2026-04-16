@@ -10,7 +10,6 @@
 struct DemoState {
   viewshell::WindowHandle floating_window;
   bool floating_visible = false;
-  viewshell::Geometry current_geometry{180, 180, 67, 16};
 };
 
 static viewshell::Geometry centered_geometry(const viewshell::Geometry& current, int width, int height) {
@@ -68,7 +67,7 @@ int main(int argc, char* argv[]) {
   main_window->set_title("Floating Demo Control");
   main_window->add_init_script("window.__demoRole='main';");
 
-  auto shared = std::make_shared<DemoState>(DemoState{*floating, false, {180, 180, 67, 16}});
+  auto shared = std::make_shared<DemoState>(DemoState{*floating, false});
 
   auto main_bridge = main_window->bridge();
   if (main_bridge) {
@@ -97,10 +96,11 @@ int main(int argc, char* argv[]) {
         int height = 16;
         if (state == "hover") { width = 81; height = 24; }
         if (state == "expanded") { width = 424; height = 70; }
-        auto geometry = centered_geometry(shared->current_geometry, width, height);
+        auto current = shared->floating_window.get_geometry();
+        if (!current) return tl::unexpected(current.error());
+        auto geometry = centered_geometry(*current, width, height);
         auto set_geometry = shared->floating_window.set_geometry(geometry);
         if (!set_geometry) return tl::unexpected(set_geometry.error());
-        shared->current_geometry = geometry;
         return viewshell::Json{{"state", state}, {"x", geometry.x}, {"y", geometry.y}, {"width", geometry.width}, {"height", geometry.height}};
       });
   }
