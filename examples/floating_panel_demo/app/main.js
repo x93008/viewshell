@@ -57,6 +57,12 @@
     }, 800);
   }
 
+  if (window.__viewshell) {
+    window.__viewshell.on('host-mouseleave', function () {
+      scheduleCollapse();
+    });
+  }
+
   shell.addEventListener('mouseenter', function () {
     clearTimeout(collapseTimer);
     if (!shell.classList.contains('expanded')) {
@@ -74,10 +80,6 @@
   });
 
   shell.addEventListener('mouseleave', function () {
-    scheduleCollapse();
-  });
-
-  document.body.addEventListener('mouseleave', function () {
     scheduleCollapse();
   });
 

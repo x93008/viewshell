@@ -167,6 +167,21 @@ LRESULT CALLBACK Win32WindowHost::WindowProc(HWND hwnd, UINT message, WPARAM wpa
     (void)self->webview_host_->set_bounds(rect);
   }
 
+  if (message == WM_MOUSEMOVE) {
+    TRACKMOUSEEVENT track{};
+    track.cbSize = sizeof(track);
+    track.dwFlags = TME_LEAVE;
+    track.hwndTrack = hwnd;
+    TrackMouseEvent(&track);
+  }
+
+  if (message == WM_MOUSELEAVE) {
+    if (self->subscribed_events_.count("host-mouseleave")) {
+      Json payload{{"kind", "native_event"}, {"name", "host-mouseleave"}, {"payload", Json::object()}};
+      (void)self->webview_host_->post_json_message(payload.dump());
+    }
+  }
+
   return DefWindowProcW(hwnd, message, wparam, lparam);
 }
 
