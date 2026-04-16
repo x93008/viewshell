@@ -49,6 +49,12 @@
     scheduleCollapse();
   });
 
+  document.addEventListener('mouseout', function (event) {
+    if (!event.relatedTarget) {
+      scheduleCollapse();
+    }
+  });
+
   shell.addEventListener('mousedown', function (event) {
     if (event.target === colorToggle) return;
     if (!shell.classList.contains('expanded')) {
