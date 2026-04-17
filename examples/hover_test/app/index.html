@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; background: transparent; }
+    .panel {
+      width: 100%; height: 100%;
+      border-radius: 12px;
+      background: green;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-family: sans-serif;
+      font-size: 14px;
+      font-weight: bold;
+      transition: background-color 200ms;
+      user-select: none;
+    }
+    .panel.hovered {
+      background: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="panel" id="panel">HOVER ME</div>
+  <script>
+    var panel = document.getElementById('panel');
+    var expanded = false;
+    var pad = 20;
+
+    panel.addEventListener('mouseenter', function() {
+      if (expanded || !window.__viewshell || !window.__viewshell.wnd) return;
+      expanded = true;
+      panel.classList.add('hovered');
+      panel.textContent = 'MOUSE IN (RED)';
+      window.__viewshell.wnd.getGeometry().then(function(geo) {
+        window.__viewshell.wnd.setGeometry(geo.x - pad, geo.y - pad, geo.width + pad * 2, geo.height + pad * 2);
+      });
+    });
+
+    panel.addEventListener('mouseleave', function() {
+      if (!expanded || !window.__viewshell || !window.__viewshell.wnd) return;
+      expanded = false;
+      panel.classList.remove('hovered');
+      panel.textContent = 'HOVER ME';
+      window.__viewshell.wnd.getGeometry().then(function(geo) {
+        window.__viewshell.wnd.setGeometry(geo.x + pad, geo.y + pad, geo.width - pad * 2, geo.height - pad * 2);
+      });
+    });
+  </script>
+</body>
+</html>

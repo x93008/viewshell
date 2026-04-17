@@ -2,16 +2,29 @@
 
 #include "win32_window_host.h"
 
+#include <dwmapi.h>
 #include <nlohmann/json.hpp>
 #include <string>
+
+#pragma comment(lib, "dwmapi.lib")
 
 #include "bridge/invoke_bus.h"
 #include "webview/win32_webview_host.h"
 #include "viewshell/runtime_state.h"
+#include "host/window_api_bootstrap.h"
 
 namespace viewshell {
 
 namespace {
+
+bool all_windows_closed(const std::shared_ptr<RuntimeAppState>& app_state) {
+  for (const auto& window : app_state->windows) {
+    if (window && !window->is_closed) {
+      return false;
+    }
+  }
+  return true;
+}
 
 std::wstring to_wstring(std::string_view value) {
   if (value.empty()) {
@@ -134,25 +147,44 @@ LRESULT CALLBACK Win32WindowHost::WindowProc(HWND hwnd, UINT message, WPARAM wpa
 
   if (message == WM_CLOSE) {
     if (auto app = self->app_state_.lock()) {
-      app->shutdown_started = true;
-      app->run_exit_code = 0;
-    }
-    if (auto window = self->window_state_.lock()) {
-      window->is_closed = true;
+      if (auto window = self->window_state_.lock()) {
+        window->is_closed = true;
+      }
+      if (all_windows_closed(app)) {
+        app->shutdown_started = true;
+        app->run_exit_code = 0;
+      }
     }
     DestroyWindow(hwnd);
     return 0;
   }
 
   if (message == WM_DESTROY) {
-    PostQuitMessage(0);
+    if (auto app = self->app_state_.lock(); app && app->shutdown_started) {
+      PostQuitMessage(0);
+    }
     return 0;
+  }
+
+  if (message == WM_ERASEBKGND && self->borderless_) {
+    return 1;
+  }
+
+  if (message == WM_PAINT && self->borderless_) {
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(hwnd, &ps);
+    FillRect(hdc, &ps.rcPaint, static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH)));
+    EndPaint(hwnd, &ps);
+    return 0;
+  }
+
+  if (message == WM_SETFOCUS && self->webview_host_) {
+    (void)self->webview_host_->move_focus();
   }
 
   if (message == WM_SIZE && self->webview_host_) {
     auto rect = self->client_rect();
     (void)self->webview_host_->set_bounds(rect);
-    self->update_shape();
   }
 
   return DefWindowProcW(hwnd, message, wparam, lparam);
@@ -167,8 +199,7 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
 
   host->size_ = {options.width, options.height};
   host->position_ = {options.x.value_or(CW_USEDEFAULT), options.y.value_or(CW_USEDEFAULT)};
-  host->borderless_ = options.borderless;
-  host->always_on_top_ = options.always_on_top;
+  host->apply_common_options(options);
   host->webview_host_ = std::make_unique<Win32WebviewHost>();
   host->invoke_bus_ = std::make_unique<InvokeBus>();
   host->webview_host_->set_transparent_background(options.borderless);
@@ -192,8 +223,7 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
       return;
     }
     if (kind == "drag") {
-      ReleaseCapture();
-      SendMessageW(host_ptr->hwnd_, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+      host_ptr->begin_drag();
       return;
     }
     if (kind == "subscribe") {
@@ -205,6 +235,22 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
       return;
     }
     if (kind == "invoke") {
+      // Handle built-in __wnd.* commands
+      if (name.rfind("__wnd.", 0) == 0) {
+        Json result_payload;
+        Result<void> ok;
+        if (host_ptr->handle_wnd_command(name, payload, result_payload, ok)) {
+          Json message_out{{"kind", "invoke_result"}, {"name", name}, {"ok", static_cast<bool>(ok)}, {"payload", ok ? result_payload : Json::object()}};
+          if (request_id_it != parsed.end() && request_id_it->is_number_unsigned()) {
+            message_out["requestId"] = *request_id_it;
+          }
+          if (!ok) {
+            message_out["error"] = Json{{"code", ok.error().code}, {"message", ok.error().message}};
+          }
+          (void)host_ptr->webview_host_->post_json_message(message_out.dump());
+          return;
+        }
+      }
       auto result = host_ptr->invoke_bus_->dispatch(name, payload);
       Json message_out{{"kind", "invoke_result"}, {"name", name}, {"ok", static_cast<bool>(result)}, {"payload", result ? *result : Json::object()}};
       if (request_id_it != parsed.end() && request_id_it->is_number_unsigned()) {
@@ -232,13 +278,23 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
   wc.hCursor = LoadCursorW(nullptr, MAKEINTRESOURCEW(IDC_ARROW));
   RegisterClassW(&wc);
 
-  DWORD style = WS_OVERLAPPEDWINDOW;
-  if (host->borderless_) {
-    style = WS_POPUP;
+  DWORD style = host->borderless_ ? WS_POPUP : WS_OVERLAPPEDWINDOW;
+  if (!host->resizable_) {
+    style &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX);
+  }
+
+  DWORD ex_style = 0;
+  if (host->always_on_top_) {
+    ex_style |= WS_EX_TOPMOST;
+  }
+  if (!host->show_in_taskbar_) {
+    ex_style |= WS_EX_TOOLWINDOW;
+  } else {
+    ex_style |= WS_EX_APPWINDOW;
   }
 
   host->hwnd_ = CreateWindowExW(
-      host->always_on_top_ ? WS_EX_TOPMOST : 0,
+      ex_style,
       class_name,
       L"Viewshell",
       style,
@@ -257,7 +313,11 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
 
   ShowWindow(host->hwnd_, SW_SHOW);
   UpdateWindow(host->hwnd_);
-  host->update_shape();
+
+  if (host->borderless_) {
+    MARGINS margins = {-1, -1, -1, -1};
+    DwmExtendFrameIntoClientArea(host->hwnd_, &margins);
+  }
 
   auto attach_result = host->webview_host_->attach(host->hwnd_, options);
   if (!attach_result) {
@@ -268,6 +328,10 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
     (void)host->webview_host_->add_init_script(kWindowsBridgeBootstrap);
   } else {
     (void)host->webview_host_->add_init_script(kWindowsBridgeBootstrap);
+  }
+
+  if (host->inject_window_api_) {
+    (void)host->webview_host_->add_init_script(kWindowApiBootstrap);
   }
 
   if (options.asset_root.has_value() && !options.asset_root->empty()) {
@@ -301,25 +365,20 @@ void Win32WindowHost::update_style() {
   }
 
   LONG_PTR style = borderless_ ? WS_POPUP : WS_OVERLAPPEDWINDOW;
+  if (!resizable_) {
+    style &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX);
+  }
   SetWindowLongPtrW(hwnd_, GWL_STYLE, style);
+  LONG_PTR ex_style = always_on_top_ ? WS_EX_TOPMOST : 0;
+  if (!show_in_taskbar_) {
+    ex_style |= WS_EX_TOOLWINDOW;
+  } else {
+    ex_style |= WS_EX_APPWINDOW;
+  }
+  SetWindowLongPtrW(hwnd_, GWL_EXSTYLE, ex_style);
   SetWindowPos(hwnd_, always_on_top_ ? HWND_TOPMOST : HWND_NOTOPMOST,
       0, 0, 0, 0,
       SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
-}
-
-void Win32WindowHost::update_shape() {
-  if (!hwnd_ || !borderless_) {
-    return;
-  }
-  RECT rect{};
-  GetWindowRect(hwnd_, &rect);
-  auto width = rect.right - rect.left;
-  auto height = rect.bottom - rect.top;
-  if (width <= 0 || height <= 0) {
-    return;
-  }
-  HRGN region = CreateEllipticRgn(0, 0, width, height);
-  SetWindowRgn(hwnd_, region, TRUE);
 }
 
 RECT Win32WindowHost::client_rect() const {
@@ -380,10 +439,33 @@ Result<void> Win32WindowHost::focus() {
   return {};
 }
 
+Result<void> Win32WindowHost::set_geometry(Geometry geometry) {
+  if (auto result = ensure_window(); !result) return result;
+  position_ = {geometry.x, geometry.y};
+  size_ = {geometry.width, geometry.height};
+  MoveWindow(hwnd_, geometry.x, geometry.y, geometry.width, geometry.height, TRUE);
+  if (webview_host_) {
+    (void)webview_host_->set_bounds(client_rect());
+  }
+  RedrawWindow(hwnd_, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW);
+  return {};
+}
+
+Result<Geometry> Win32WindowHost::get_geometry() const {
+  if (auto result = ensure_window(); !result) return tl::unexpected(result.error());
+  RECT rect{};
+  GetWindowRect(hwnd_, &rect);
+  return Geometry{rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top};
+}
+
 Result<void> Win32WindowHost::set_size(Size size) {
   if (auto result = ensure_window(); !result) return result;
   size_ = size;
   SetWindowPos(hwnd_, nullptr, 0, 0, size.width, size.height, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+  if (webview_host_) {
+    (void)webview_host_->set_bounds(client_rect());
+  }
+  InvalidateRect(hwnd_, nullptr, TRUE);
   return {};
 }
 
@@ -398,6 +480,9 @@ Result<void> Win32WindowHost::set_position(Position pos) {
   if (auto result = ensure_window(); !result) return result;
   position_ = pos;
   SetWindowPos(hwnd_, nullptr, pos.x, pos.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+  if (webview_host_) {
+    (void)webview_host_->set_bounds(client_rect());
+  }
   return {};
 }
 
@@ -468,6 +553,13 @@ Result<void> Win32WindowHost::emit(std::string name, const Json& payload) {
   }
   Json message{{"kind", "native_event"}, {"name", name}, {"payload", payload}};
   return webview_host_->post_json_message(message.dump());
+}
+
+void Win32WindowHost::begin_drag() {
+  if (hwnd_) {
+    ReleaseCapture();
+    SendMessageW(hwnd_, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+  }
 }
 
 Result<Capabilities> Win32WindowHost::capabilities() const {

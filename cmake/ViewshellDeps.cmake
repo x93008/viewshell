@@ -5,7 +5,7 @@ if(WIN32)
   target_link_libraries(viewshell PRIVATE webview2-sdk::webview2-sdk)
   target_compile_definitions(viewshell PRIVATE VIEWSHELL_HAS_WEBVIEW2=1)
 
-  target_link_libraries(viewshell PRIVATE ole32 user32 shell32)
+  target_link_libraries(viewshell PRIVATE ole32 user32 shell32 dwmapi)
 elseif(APPLE)
   find_library(APPKIT_FRAMEWORK AppKit REQUIRED)
   find_library(FOUNDATION_FRAMEWORK Foundation REQUIRED)

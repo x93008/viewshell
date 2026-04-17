@@ -3,7 +3,6 @@
 #ifdef _WIN32
 
 #include <memory>
-#include <unordered_set>
 #include <windows.h>
 
 #include <viewshell/options.h>
@@ -36,6 +35,8 @@ public:
   Result<void> show() override;
   Result<void> hide() override;
   Result<void> focus() override;
+  Result<void> set_geometry(Geometry geometry) override;
+  Result<Geometry> get_geometry() const override;
   Result<void> set_size(Size size) override;
   Result<Size> get_size() const override;
   Result<void> set_position(Position pos) override;
@@ -55,6 +56,7 @@ public:
   Result<Capabilities> capabilities() const override;
   Result<void> register_command(std::string name, CommandHandler handler) override;
   Result<void> emit(std::string name, const Json& payload) override;
+  void begin_drag() override;
 
 private:
   Win32WindowHost(std::shared_ptr<RuntimeAppState> app_state,
@@ -64,16 +66,12 @@ private:
   Result<void> ensure_window() const;
   void update_style();
   RECT client_rect() const;
-  void update_shape();
 
   std::weak_ptr<RuntimeAppState> app_state_;
   std::weak_ptr<RuntimeWindowState> window_state_;
   std::unique_ptr<Win32WebviewHost> webview_host_;
   std::unique_ptr<InvokeBus> invoke_bus_;
-  std::unordered_set<std::string> subscribed_events_;
   HWND hwnd_ = nullptr;
-  bool borderless_ = false;
-  bool always_on_top_ = false;
   Size size_{};
   Position position_{};
 };

@@ -25,8 +25,7 @@ public:
   virtual Result<void> post(std::shared_ptr<RuntimeAppState> app_state,
       std::function<void()> task) = 0;
 
-  virtual Result<int> run(std::shared_ptr<RuntimeAppState> app_state,
-      std::shared_ptr<RuntimeWindowState> window_state) = 0;
+  virtual Result<int> run(std::shared_ptr<RuntimeAppState> app_state) = 0;
 };
 
 } // namespace viewshell

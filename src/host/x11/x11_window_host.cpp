@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "bridge/x11_bridge_driver.h"
+#include "host/window_api_bootstrap.h"
 #include "bridge/invoke_bus.h"
 #include "webview/x11_webview_driver.h"
 #include "window/x11_window_driver.h"
@@ -11,6 +12,19 @@
 #include <nlohmann/json.hpp>
 
 namespace viewshell {
+
+namespace {
+
+bool all_windows_closed(const std::shared_ptr<RuntimeAppState>& app_state) {
+  for (const auto& window : app_state->windows) {
+    if (window && !window->is_closed) {
+      return false;
+    }
+  }
+  return true;
+}
+
+} // namespace
 
 X11WindowHost::X11WindowHost(std::shared_ptr<RuntimeAppState> app_state,
     std::shared_ptr<RuntimeWindowState> window_state)
@@ -32,18 +46,21 @@ Result<std::shared_ptr<X11WindowHost>> X11WindowHost::create(
   host->webview_driver_ = std::make_unique<WebviewDriver>();
   host->bridge_driver_ = std::make_unique<BridgeDriver>();
   host->invoke_bus_ = std::make_unique<InvokeBus>();
+  host->apply_common_options(options);
 
   host->window_driver_->on_close = [app_state = weak_app_state,
                                        window_state = weak_window_state,
                                        driver = host->window_driver_.get()]() {
     if (auto app = app_state.lock()) {
-      app->shutdown_started = true;
-      app->run_exit_code = 0;
+      if (auto window = window_state.lock()) {
+        window->is_closed = true;
+      }
+      if (all_windows_closed(app)) {
+        app->shutdown_started = true;
+        app->run_exit_code = 0;
+        driver->quit_main_loop();
+      }
     }
-    if (auto window = window_state.lock()) {
-      window->is_closed = true;
-    }
-    driver->quit_main_loop();
   };
 
   auto native = host->window_driver_->create(options);
@@ -82,6 +99,22 @@ Result<std::shared_ptr<X11WindowHost>> X11WindowHost::create(
     std::string name = *name_it;
 
     if (kind == "invoke") {
+      // Handle built-in __wnd.* commands
+      if (name.rfind("__wnd.", 0) == 0) {
+        Json result_payload;
+        Result<void> ok;
+        if (host_ptr->handle_wnd_command(name, payload, result_payload, ok)) {
+          Json message{{"kind", "invoke_result"}, {"name", name}, {"ok", static_cast<bool>(ok)}, {"payload", ok ? result_payload : Json::object()}};
+          if (request_id_it != parsed.end() && request_id_it->is_number_unsigned()) {
+            message["requestId"] = *request_id_it;
+          }
+          if (!ok) {
+            message["error"] = Json{{"code", ok.error().code}, {"message", ok.error().message}};
+          }
+          (void)bridge->post_to_page(message.dump());
+          return;
+        }
+      }
       auto result = invoke_bus->dispatch(name, payload);
       Json message{{"kind", "invoke_result"}, {"name", name},
           {"ok", static_cast<bool>(result)},
@@ -113,6 +146,10 @@ Result<std::shared_ptr<X11WindowHost>> X11WindowHost::create(
       }
     }
   };
+
+  if (host->inject_window_api_) {
+    (void)host->add_init_script(kWindowApiBootstrap);
+  }
 
   if (options.asset_root.has_value() && !options.asset_root->empty()) {
     auto load_result = host->webview_driver_->load_file(*options.asset_root);
@@ -165,6 +202,20 @@ Result<void> X11WindowHost::hide() {
 
 Result<void> X11WindowHost::focus() {
   return window_driver_->focus();
+}
+
+Result<void> X11WindowHost::set_geometry(Geometry geometry) {
+  auto pos_result = set_position(Position{geometry.x, geometry.y});
+  if (!pos_result) return tl::unexpected(pos_result.error());
+  return set_size(Size{geometry.width, geometry.height});
+}
+
+Result<Geometry> X11WindowHost::get_geometry() const {
+  auto pos = get_position();
+  if (!pos) return tl::unexpected(pos.error());
+  auto size = get_size();
+  if (!size) return tl::unexpected(size.error());
+  return Geometry{pos->x, pos->y, size->width, size->height};
 }
 
 Result<void> X11WindowHost::set_size(Size size) {

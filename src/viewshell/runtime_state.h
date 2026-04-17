@@ -15,6 +15,7 @@
 namespace viewshell {
 
 class WindowHost;
+struct RuntimeWindowState;
 
 struct RuntimeAppState {
   bool run_started = false;
@@ -25,10 +26,10 @@ struct RuntimeAppState {
   std::mutex mutex;
   std::condition_variable cv;
   std::vector<std::string> logs;
+  std::vector<std::shared_ptr<RuntimeWindowState>> windows;
 };
 
 struct RuntimeWindowState {
-  bool has_window = false;
   bool is_closed = false;
   bool close_acknowledged = false;
   std::vector<PageLoadHandler> page_load_handlers;

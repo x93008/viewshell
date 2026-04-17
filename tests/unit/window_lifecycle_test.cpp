@@ -26,6 +26,13 @@ public:
   viewshell::Result<void> show() override { return {}; }
   viewshell::Result<void> hide() override { return {}; }
   viewshell::Result<void> focus() override { return {}; }
+  viewshell::Result<void> set_geometry(viewshell::Geometry geometry) override {
+    last_geometry = geometry;
+    return {};
+  }
+  viewshell::Result<viewshell::Geometry> get_geometry() const override {
+    return last_geometry;
+  }
   viewshell::Result<void> set_size(viewshell::Size) override { return {}; }
   viewshell::Result<viewshell::Size> get_size() const override {
     return viewshell::Size{640, 480};
@@ -102,6 +109,7 @@ public:
   std::string last_script;
   std::string last_event_name;
   viewshell::Json last_event_payload;
+  viewshell::Geometry last_geometry{10, 20, 640, 480};
   std::vector<std::string> init_scripts;
   viewshell::PageLoadHandler page_load_handler;
   viewshell::NavigationHandler navigation_handler;
@@ -114,7 +122,6 @@ public:
 
 TEST(WindowHandleLifecycle, reports_unsupported_backend_when_no_window_host_present) {
   auto state = std::make_shared<viewshell::RuntimeWindowState>();
-  state->has_window = true;
 
   EXPECT_EQ(state->window_host, nullptr);
 
@@ -127,7 +134,6 @@ TEST(WindowHandleLifecycle, reports_unsupported_backend_when_no_window_host_pres
 
 TEST(WindowHandleLifecycle, delegates_window_ops_to_window_host) {
   auto state = std::make_shared<viewshell::RuntimeWindowState>();
-  state->has_window = true;
   auto host = std::make_shared<RecordingWindowHost>();
   state->window_host = host;
 
@@ -137,9 +143,26 @@ TEST(WindowHandleLifecycle, delegates_window_ops_to_window_host) {
   EXPECT_EQ(host->last_title, "Delegated title");
 }
 
+TEST(WindowHandleLifecycle, delegates_geometry_ops_to_window_host) {
+  auto state = std::make_shared<viewshell::RuntimeWindowState>();
+  auto host = std::make_shared<RecordingWindowHost>();
+  state->window_host = host;
+
+  viewshell::WindowHandle handle(state);
+  ASSERT_TRUE(handle.set_geometry({30, 40, 100, 50}));
+  auto geometry = handle.get_geometry();
+
+  ASSERT_TRUE(geometry);
+  EXPECT_EQ(host->last_geometry.x, 30);
+  EXPECT_EQ(host->last_geometry.y, 40);
+  EXPECT_EQ(host->last_geometry.width, 100);
+  EXPECT_EQ(host->last_geometry.height, 50);
+  EXPECT_EQ(geometry->width, 100);
+  EXPECT_EQ(geometry->height, 50);
+}
+
 TEST(WindowHandleLifecycle, delegates_webview_ops_to_window_host) {
   auto state = std::make_shared<viewshell::RuntimeWindowState>();
-  state->has_window = true;
   auto host = std::make_shared<RecordingWindowHost>();
   state->window_host = host;
 
@@ -151,7 +174,6 @@ TEST(WindowHandleLifecycle, delegates_webview_ops_to_window_host) {
 
 TEST(WindowHandleLifecycle, bridge_handle_delegates_registration_and_emit_to_window_host) {
   auto state = std::make_shared<viewshell::RuntimeWindowState>();
-  state->has_window = true;
   auto host = std::make_shared<RecordingWindowHost>();
   state->window_host = host;
 
@@ -177,7 +199,6 @@ TEST(WindowHandleLifecycle, bridge_handle_delegates_registration_and_emit_to_win
 
 TEST(WindowHandleLifecycle, reports_unsupported_backend_for_window_ops_when_no_window_host_present) {
   auto state = std::make_shared<viewshell::RuntimeWindowState>();
-  state->has_window = true;
 
   viewshell::WindowHandle handle(state);
   auto result = handle.set_title("missing host");
@@ -186,12 +207,11 @@ TEST(WindowHandleLifecycle, reports_unsupported_backend_for_window_ops_when_no_w
   EXPECT_EQ(result.error().code, "unsupported_by_backend");
 }
 
-TEST(WindowLifecycle, second_window_is_rejected) {
+TEST(WindowLifecycle, second_window_is_supported) {
   auto app = viewshell::Application::create({}).value();
   EXPECT_TRUE(app.create_window({}));
   auto second = app.create_window({});
-  ASSERT_FALSE(second);
-  EXPECT_EQ(second.error().code, "multiple_windows_unsupported");
+  ASSERT_TRUE(second);
 }
 
 TEST(WindowLifecycle, closed_handle_reports_window_closed) {
@@ -278,22 +298,20 @@ TEST(WindowLifecycle, posted_exceptions_are_caught) {
   EXPECT_TRUE(still_running);
 }
 
-TEST(WindowLifecycle, create_window_after_run_started_is_rejected_as_multiple_windows_unsupported) {
+TEST(WindowLifecycle, create_window_after_run_started_is_supported) {
   auto app = viewshell::Application::create({}).value();
   EXPECT_TRUE(app.create_window({}));
   viewshell::MarkRunStartedForTest(app);
   auto result = app.create_window({});
-  ASSERT_FALSE(result);
-  EXPECT_EQ(result.error().code, "multiple_windows_unsupported");
+  ASSERT_TRUE(result);
 }
 
-TEST(WindowLifecycle, create_window_after_close_is_rejected_as_multiple_windows_unsupported) {
+TEST(WindowLifecycle, create_window_after_close_is_supported) {
   auto app = viewshell::Application::create({}).value();
   auto window = app.create_window({}).value();
   viewshell::MarkWindowClosedForTest(window);
   auto result = app.create_window({});
-  ASSERT_FALSE(result);
-  EXPECT_EQ(result.error().code, "multiple_windows_unsupported");
+  ASSERT_TRUE(result);
 }
 
 TEST(WindowLifecycle, close_starts_shutdown_and_run_exits) {

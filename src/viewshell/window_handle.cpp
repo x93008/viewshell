@@ -60,6 +60,18 @@ Result<void> WindowHandle::focus() {
   return tl::unexpected(Error{"unsupported_by_backend", "no window backend"});
 }
 
+Result<void> WindowHandle::set_geometry(Geometry geometry) {
+  if (state_->is_closed) return tl::unexpected(Error{"window_closed", ""});
+  if (state_->window_host) return state_->window_host->set_geometry(geometry);
+  return tl::unexpected(Error{"unsupported_by_backend", "no window backend"});
+}
+
+Result<Geometry> WindowHandle::get_geometry() const {
+  if (state_->is_closed) return tl::unexpected(Error{"window_closed", ""});
+  if (state_->window_host) return state_->window_host->get_geometry();
+  return tl::unexpected(Error{"unsupported_by_backend", "no window backend"});
+}
+
 Result<void> WindowHandle::set_size(Size size) {
   if (state_->is_closed) return tl::unexpected(Error{"window_closed", ""});
   if (state_->window_host) return state_->window_host->set_size(size);

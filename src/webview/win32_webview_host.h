@@ -32,6 +32,7 @@ public:
   Result<void> set_message_handler(std::function<void(std::string_view)> handler);
   Result<void> post_json_message(std::string_view raw_message);
   void set_transparent_background(bool enabled) { transparent_background_ = enabled; }
+  Result<void> move_focus();
 
 private:
   Result<void> ensure_ready() const;

@@ -35,7 +35,6 @@ private:
 
   NormalizedAppOptions opts_;
   std::shared_ptr<RuntimeAppState> app_state_;
-  std::shared_ptr<RuntimeWindowState> window_state_;
   std::unique_ptr<BackendRuntime> backend_runtime_;
 
   friend bool HasBackendRuntimeForTest(const Application& app);

@@ -1,8 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <unordered_set>
-
 #include <viewshell/options.h>
 
 #include "runtime/window_host.h"
@@ -35,6 +33,8 @@ public:
   Result<void> show() override;
   Result<void> hide() override;
   Result<void> focus() override;
+  Result<void> set_geometry(Geometry geometry) override;
+  Result<Geometry> get_geometry() const override;
   Result<void> set_size(Size size) override;
   Result<Size> get_size() const override;
   Result<void> set_position(Position pos) override;
@@ -65,7 +65,6 @@ private:
   std::unique_ptr<InvokeBus> invoke_bus_;
   std::unique_ptr<WindowDriver> window_driver_;
   std::unique_ptr<WebviewDriver> webview_driver_;
-  std::unordered_set<std::string> subscribed_events_;
 };
 
 } // namespace viewshell

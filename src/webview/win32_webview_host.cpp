@@ -347,6 +347,12 @@ Result<void> Win32WebviewHost::post_json_message(std::string_view raw_message) {
   return {};
 }
 
+Result<void> Win32WebviewHost::move_focus() {
+  if (auto result = ensure_ready(); !result) return result;
+  controller_->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
+  return {};
+}
+
 } // namespace viewshell
 
 #endif

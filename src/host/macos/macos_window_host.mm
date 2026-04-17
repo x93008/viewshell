@@ -1,6 +1,7 @@
 #ifdef __APPLE__
 
 #include "host/macos/macos_window_host.h"
+#include "host/window_api_bootstrap.h"
 
 #import <AppKit/AppKit.h>
 #import <WebKit/WebKit.h>
@@ -31,6 +32,14 @@ namespace viewshell { class MacOSWindowHost; }
 
 @interface ViewshellNavigationDelegate : NSObject<WKNavigationDelegate>
 @property(nonatomic, assign) viewshell::MacOSWindowHost* host;
+@end
+
+@interface ViewshellBorderlessWindow : NSWindow
+@end
+
+@implementation ViewshellBorderlessWindow
+- (BOOL)canBecomeKeyWindow { return YES; }
+- (BOOL)canBecomeMainWindow { return YES; }
 @end
 
 @implementation ViewshellWindowDelegate
@@ -178,6 +187,15 @@ constexpr const char* kMacBridgeBootstrap = R"JS((function () {
   };
 })();)JS";
 
+bool all_windows_closed(const std::shared_ptr<RuntimeAppState>& app_state) {
+  for (const auto& window : app_state->windows) {
+    if (window && !window->is_closed) {
+      return false;
+    }
+  }
+  return true;
+}
+
 } // namespace
 
 MacOSWindowHost::MacOSWindowHost(std::shared_ptr<RuntimeAppState> app_state,
@@ -223,13 +241,14 @@ Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
 
   auto host = std::shared_ptr<MacOSWindowHost>(
       new MacOSWindowHost(std::move(app_state), std::move(window_state)));
-  host->borderless_ = options.borderless;
-  host->always_on_top_ = options.always_on_top;
+  host->apply_common_options(options);
   host->invoke_bus_ = std::make_unique<InvokeBus>();
 
   NSRect rect = NSMakeRect(options.x.value_or(100), options.y.value_or(100), options.width, options.height);
   NSWindowStyleMask style = host->borderless_ ? NSWindowStyleMaskBorderless : (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable);
-  NSWindow* window = [[NSWindow alloc] initWithContentRect:rect styleMask:style backing:NSBackingStoreBuffered defer:NO];
+  NSWindow* window = host->borderless_
+    ? [[ViewshellBorderlessWindow alloc] initWithContentRect:rect styleMask:style backing:NSBackingStoreBuffered defer:NO]
+    : [[NSWindow alloc] initWithContentRect:rect styleMask:style backing:NSBackingStoreBuffered defer:NO];
   if (!window) {
     return tl::unexpected(Error{"window_creation_failed", "failed to create NSWindow"});
   }
@@ -240,6 +259,10 @@ Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
   [window makeKeyAndOrderFront:nil];
   if (host->always_on_top_) {
     [window setLevel:NSFloatingWindowLevel];
+  }
+
+  if (!host->show_in_taskbar_) {
+    [window setCollectionBehavior:([window collectionBehavior] | NSWindowCollectionBehaviorTransient)];
   }
 
   WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
@@ -260,6 +283,7 @@ Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
     [window setOpaque:NO];
     [window setBackgroundColor:[NSColor clearColor]];
     [webview setValue:@NO forKey:@"drawsBackground"];
+    [window setAcceptsMouseMovedEvents:YES];
   }
   [[window contentView] addSubview:webview];
   [bootstrap release];
@@ -272,6 +296,10 @@ Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
   host->message_handler_ = (void*)[message_handler retain];
   host->navigation_delegate_ = (void*)[navigation_delegate retain];
   host->user_content_controller_ = (void*)[user_content retain];
+
+  if (host->inject_window_api_) {
+    (void)host->add_init_script(kWindowApiBootstrap);
+  }
 
   if (options.asset_root.has_value() && !options.asset_root->empty()) {
     auto load_result = host->load_file(*options.asset_root);
@@ -318,6 +346,19 @@ Result<void> MacOSWindowHost::show() { if (auto r=ensure_window(); !r) return r;
 Result<void> MacOSWindowHost::hide() { if (auto r=ensure_window(); !r) return r; [(NSWindow*)window_ orderOut:nil]; return {}; }
 Result<void> MacOSWindowHost::focus() { if (auto r=ensure_window(); !r) return r; [(NSWindow*)window_ makeKeyAndOrderFront:nil]; [NSApp activateIgnoringOtherApps:YES]; return {}; }
 
+Result<void> MacOSWindowHost::set_geometry(Geometry geometry) {
+  if (auto r = ensure_window(); !r) return r;
+  NSRect frame = NSMakeRect(geometry.x, geometry.y, geometry.width, geometry.height);
+  [(NSWindow*)window_ setFrame:frame display:YES];
+  return {};
+}
+
+Result<Geometry> MacOSWindowHost::get_geometry() const {
+  if (auto r = ensure_window(); !r) return tl::unexpected(r.error());
+  NSRect frame = [(NSWindow*)window_ frame];
+  return Geometry{static_cast<int>(frame.origin.x), static_cast<int>(frame.origin.y), static_cast<int>(frame.size.width), static_cast<int>(frame.size.height)};
+}
+
 Result<void> MacOSWindowHost::set_size(Size size) {
   if (auto r = ensure_window(); !r) return r;
   NSWindow* window = (NSWindow*)window_;
@@ -354,14 +395,16 @@ Result<void> MacOSWindowHost::set_always_on_top(bool enabled) { always_on_top_ =
 Result<void> MacOSWindowHost::close() {
   if (auto r = ensure_window(); !r) return r;
   if (auto app = app_state_.lock()) {
-    app->shutdown_started = true;
-    app->run_exit_code = 0;
-  }
-  if (auto state = window_state_.lock()) {
-    state->is_closed = true;
+    if (auto state = window_state_.lock()) {
+      state->is_closed = true;
+    }
+    if (all_windows_closed(app)) {
+      app->shutdown_started = true;
+      app->run_exit_code = 0;
+      [NSApp stop:nil];
+    }
   }
   [(NSWindow*)window_ orderOut:nil];
-  [NSApp stop:nil];
   return {};
 }
 
@@ -527,6 +570,22 @@ void MacOSWindowHost::handle_script_message(std::string_view message) {
     return;
   }
   if (kind == "invoke") {
+    // Handle built-in __wnd.* commands
+    if (name.rfind("__wnd.", 0) == 0) {
+      Json result_payload;
+      Result<void> ok;
+      if (handle_wnd_command(name, payload, result_payload, ok)) {
+        Json message_out{{"kind", "invoke_result"}, {"name", name}, {"ok", static_cast<bool>(ok)}, {"payload", ok ? result_payload : Json::object()}};
+        if (request_id_it != parsed.end() && request_id_it->is_number_unsigned()) {
+          message_out["requestId"] = *request_id_it;
+        }
+        if (!ok) {
+          message_out["error"] = Json{{"code", ok.error().code}, {"message", ok.error().message}};
+        }
+        dispatch_json_to_page(message_out);
+        return;
+      }
+    }
     auto result = invoke_bus_->dispatch(name, payload);
     Json message_out{{"kind", "invoke_result"}, {"name", name}, {"ok", static_cast<bool>(result)}, {"payload", result ? *result : Json::object()}};
     if (request_id_it != parsed.end() && request_id_it->is_number_unsigned()) {
