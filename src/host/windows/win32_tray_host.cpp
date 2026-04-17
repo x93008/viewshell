@@ -3,6 +3,10 @@
 #include "win32_tray_host.h"
 
 #include <string>
+#include <objidl.h>
+#include <gdiplus.h>
+
+#pragma comment(lib, "gdiplus.lib")
 
 namespace viewshell {
 
@@ -10,6 +14,15 @@ namespace {
 
 constexpr UINT WM_TRAY_CALLBACK = WM_APP + 1;
 constexpr UINT MENU_ID_BASE = 1000;
+
+static ULONG_PTR gdiplus_token_ = 0;
+
+void ensure_gdiplus() {
+  if (gdiplus_token_ == 0) {
+    Gdiplus::GdiplusStartupInput input;
+    Gdiplus::GdiplusStartup(&gdiplus_token_, &input, nullptr);
+  }
+}
 
 std::wstring to_wstring(std::string_view value) {
   if (value.empty()) {
@@ -138,8 +151,21 @@ Result<std::shared_ptr<Win32TrayHost>> Win32TrayHost::create(
 
 Result<void> Win32TrayHost::load_icon(std::string_view icon_path) {
   auto wide_path = to_wstring(icon_path);
-  HICON icon = static_cast<HICON>(LoadImageW(nullptr, wide_path.c_str(),
+  HICON icon = nullptr;
+
+  // Try LoadImageW first (supports .ico/.bmp)
+  icon = static_cast<HICON>(LoadImageW(nullptr, wide_path.c_str(),
       IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE));
+
+  // Fallback to GDI+ for .png and other formats
+  if (!icon) {
+    ensure_gdiplus();
+    auto* bitmap = Gdiplus::Bitmap::FromFile(wide_path.c_str());
+    if (bitmap && bitmap->GetLastStatus() == Gdiplus::Ok) {
+      bitmap->GetHICON(&icon);
+      delete bitmap;
+    }
+  }
 
   if (!icon) {
     return tl::unexpected(Error{"icon_load_failed",
