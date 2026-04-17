@@ -23,11 +23,9 @@ namespace viewshell { class MacOSTrayHost; }
 
   NSEvent* event = [NSApp currentEvent];
   if (event.type == NSEventTypeRightMouseUp) {
-    // Right click: show popup menu
-    NSStatusItem* item = (__bridge NSStatusItem*)self.host->status_item_ptr();
-    NSMenu* menu = (__bridge NSMenu*)self.host->menu_ptr();
-    if (item && menu) {
-      [item popUpStatusItemMenu:menu];
+    // Right click: custom handler or native menu
+    if (self.host) {
+      self.host->invoke_right_click();
     }
   } else {
     // Left click: call on_click callback
@@ -54,6 +52,19 @@ void MacOSTrayHost::invoke_click() {
   if (on_click_) on_click_();
 }
 
+void MacOSTrayHost::invoke_right_click() {
+  if (on_right_click_) {
+    on_right_click_();
+  } else {
+    // Fallback to native menu
+    NSStatusItem* item = (__bridge NSStatusItem*)status_item_;
+    NSMenu* menu = (__bridge NSMenu*)menu_;
+    if (item && menu) {
+      [item popUpStatusItemMenu:menu];
+    }
+  }
+}
+
 void MacOSTrayHost::invoke_menu_click(int index) {
   if (on_menu_click_ && index >= 0 && index < static_cast<int>(menu_items_.size())) {
     on_menu_click_(menu_items_[index].id);
@@ -76,6 +87,7 @@ MacOSTrayHost::~MacOSTrayHost() {
 Result<std::shared_ptr<MacOSTrayHost>> MacOSTrayHost::create(const TrayOptions& options) {
   auto host = std::shared_ptr<MacOSTrayHost>(new MacOSTrayHost());
   host->on_click_ = options.on_click;
+  host->on_right_click_ = options.on_right_click;
   host->on_menu_click_ = options.on_menu_click;
   host->menu_items_ = options.menu;
 

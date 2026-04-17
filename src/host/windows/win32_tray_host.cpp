@@ -56,7 +56,9 @@ LRESULT CALLBACK Win32TrayHost::WindowProc(
         self->on_click_();
       }
     } else if (tray_event == WM_RBUTTONUP) {
-      if (self->hmenu_) {
+      if (self->on_right_click_) {
+        self->on_right_click_();
+      } else if (self->hmenu_) {
         POINT pt;
         GetCursorPos(&pt);
         SetForegroundWindow(hwnd);
@@ -87,6 +89,7 @@ Result<std::shared_ptr<Win32TrayHost>> Win32TrayHost::create(
   auto host = std::shared_ptr<Win32TrayHost>(new Win32TrayHost());
 
   host->on_click_ = options.on_click;
+  host->on_right_click_ = options.on_right_click;
   host->on_menu_click_ = options.on_menu_click;
   host->menu_items_ = options.menu;
 

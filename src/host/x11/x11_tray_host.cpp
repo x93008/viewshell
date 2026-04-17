@@ -15,6 +15,7 @@ Result<std::shared_ptr<X11TrayHost>> X11TrayHost::create(
   auto host = std::shared_ptr<X11TrayHost>(new X11TrayHost());
 
   host->on_click_ = options.on_click;
+  host->on_right_click_ = options.on_right_click;
   host->on_menu_click_ = options.on_menu_click;
 
   host->icon_ = gtk_status_icon_new_from_file(options.icon_path.c_str());
@@ -48,6 +49,10 @@ void X11TrayHost::on_activate(GtkStatusIcon* /*icon*/, void* user_data) {
 void X11TrayHost::on_popup_menu(GtkStatusIcon* icon, unsigned int button,
     unsigned int activate_time, void* user_data) {
   auto* self = static_cast<X11TrayHost*>(user_data);
+  if (self->on_right_click_) {
+    self->on_right_click_();
+    return;
+  }
   if (!self->menu_) {
     return;
   }

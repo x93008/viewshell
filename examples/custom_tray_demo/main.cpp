@@ -90,9 +90,6 @@ int main(int argc, char* argv[]) {
   viewshell::TrayOptions tray_opts;
   tray_opts.icon_path = icon_path;
   tray_opts.tooltip = "Custom Tray Menu";
-  tray_opts.menu = {
-    {"__popup", "Menu"},
-  };
   tray_opts.on_click = [shared]() {
     if (shared->menu_visible) {
       shared->menu_window.hide();
@@ -102,7 +99,7 @@ int main(int argc, char* argv[]) {
       shared->main_window.focus();
     }
   };
-  tray_opts.on_menu_click = [shared](const std::string&) {
+  tray_opts.on_right_click = [shared]() {
     if (!shared->tray) return;
     auto rect = shared->tray->get_icon_rect();
     int popup_w = 200;

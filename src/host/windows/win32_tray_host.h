@@ -43,6 +43,7 @@ private:
 
   std::vector<TrayMenuItem> menu_items_;
   std::function<void()> on_click_;
+  std::function<void()> on_right_click_;
   std::function<void(const std::string& id)> on_menu_click_;
 };
 

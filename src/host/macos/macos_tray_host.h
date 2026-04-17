@@ -30,6 +30,7 @@ public:
   void* status_item_ptr() const;
   void* menu_ptr() const;
   void invoke_click();
+  void invoke_right_click();
   void invoke_menu_click(int index);
 
 private:
@@ -43,6 +44,7 @@ private:
 
   std::vector<TrayMenuItem> menu_items_;
   std::function<void()> on_click_;
+  std::function<void()> on_right_click_;
   std::function<void(const std::string&)> on_menu_click_;
 };
 

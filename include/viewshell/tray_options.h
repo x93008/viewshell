@@ -16,7 +16,8 @@ struct TrayOptions {
   std::string icon_path;
   std::string tooltip;
   std::vector<TrayMenuItem> menu;
-  std::function<void()> on_click;
+  std::function<void()> on_click;          // left click
+  std::function<void()> on_right_click;    // right click (bypasses native menu if set)
   std::function<void(const std::string& id)> on_menu_click;
 };
 
