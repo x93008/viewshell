@@ -19,7 +19,7 @@
       transition: background-color 200ms;
       user-select: none;
     }
-    .panel:hover {
+    .panel.hovered {
       background: red;
     }
   </style>
@@ -28,11 +28,26 @@
   <div class="panel" id="panel">HOVER ME</div>
   <script>
     var panel = document.getElementById('panel');
+    var expanded = false;
+
     panel.addEventListener('mouseenter', function() {
+      if (expanded) return;
+      expanded = true;
+      panel.classList.add('hovered');
       panel.textContent = 'MOUSE IN (RED)';
+      if (window.__viewshell) {
+        window.__viewshell.invoke('hover.expand', {});
+      }
     });
+
     panel.addEventListener('mouseleave', function() {
-      panel.textContent = 'MOUSE OUT (GREEN)';
+      if (!expanded) return;
+      expanded = false;
+      panel.classList.remove('hovered');
+      panel.textContent = 'HOVER ME';
+      if (window.__viewshell) {
+        window.__viewshell.invoke('hover.shrink', {});
+      }
     });
   </script>
 </body>
