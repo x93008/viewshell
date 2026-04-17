@@ -105,7 +105,7 @@ Result<std::shared_ptr<Win32TrayHost>> Win32TrayHost::create(
   host->nid_.uID = 1;
   host->nid_.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
   host->nid_.uCallbackMessage = WM_TRAY_CALLBACK;
-  host->nid_.hIcon = LoadIconW(nullptr, IDI_APPLICATION);
+  host->nid_.hIcon = LoadIconW(nullptr, MAKEINTRESOURCEW(32512));
 
   // Load custom icon if provided
   if (!options.icon_path.empty()) {
