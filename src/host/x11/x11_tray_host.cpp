@@ -138,12 +138,20 @@ Result<Geometry> X11TrayHost::get_icon_rect() const {
   if (!icon_) {
     return tl::unexpected(Error{"Tray icon not initialized"});
   }
+  GdkScreen* screen = nullptr;
   GdkRectangle area = {};
-  if (!gtk_status_icon_get_geometry(icon_, nullptr, &area, nullptr)) {
+  if (!gtk_status_icon_get_geometry(icon_, &screen, &area, nullptr)) {
     return tl::unexpected(Error{"icon_rect_failed",
         "gtk_status_icon_get_geometry failed"});
   }
-  return Geometry{area.x, area.y, area.width, area.height};
+  // Convert physical pixels to logical coordinates for HiDPI
+  int scale = 1;
+  if (screen) {
+    scale = gdk_screen_get_monitor_scale_factor(screen,
+        gdk_screen_get_monitor_at_point(screen, area.x, area.y));
+    if (scale < 1) scale = 1;
+  }
+  return Geometry{area.x / scale, area.y / scale, area.width / scale, area.height / scale};
 }
 
 Result<void> X11TrayHost::remove() {
