@@ -199,15 +199,14 @@ LRESULT CALLBACK Win32WindowHost::WindowProc(HWND hwnd, UINT message, WPARAM wpa
   }
 
   if (message == WM_TIMER && wparam == 1) {
+    if (!IsWindowVisible(hwnd)) return 0;
     POINT pt;
     GetCursorPos(&pt);
     RECT rect;
     GetWindowRect(hwnd, &rect);
-    if (!PtInRect(&rect, pt)) {
-      if (self->subscribed_events_.count("host-mouseleave")) {
-        Json payload{{"kind", "native_event"}, {"name", "host-mouseleave"}, {"payload", Json::object()}};
-        (void)self->webview_host_->post_json_message(payload.dump());
-      }
+    if (!PtInRect(&rect, pt) && self->webview_host_) {
+      Json payload{{"kind", "native_event"}, {"name", "host-mouseleave"}, {"payload", Json::object()}};
+      (void)self->webview_host_->post_json_message(payload.dump());
     }
     return 0;
   }
@@ -257,16 +256,10 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
     }
     if (kind == "subscribe") {
       host_ptr->subscribed_events_.insert(name);
-      if (name == "host-mouseleave" && host_ptr->hwnd_) {
-        SetTimer(host_ptr->hwnd_, 1, 100, nullptr);
-      }
       return;
     }
     if (kind == "unsubscribe") {
       host_ptr->subscribed_events_.erase(name);
-      if (name == "host-mouseleave" && host_ptr->hwnd_) {
-        KillTimer(host_ptr->hwnd_, 1);
-      }
       return;
     }
     if (kind == "invoke") {
@@ -336,6 +329,7 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
   if (host->borderless_) {
     MARGINS margins = {-1, -1, -1, -1};
     DwmExtendFrameIntoClientArea(host->hwnd_, &margins);
+    SetTimer(host->hwnd_, 1, 100, nullptr);
   }
 
   auto attach_result = host->webview_host_->attach(host->hwnd_, options);
