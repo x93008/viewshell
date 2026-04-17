@@ -115,6 +115,9 @@ Result<Size> WindowDriver::get_size() const {
 
 Result<void> WindowDriver::set_position(Position pos) {
   if (!created_) return tl::unexpected(Error{"window_not_ready", ""});
+  // Set user position hint so window manager respects the position
+  GdkGeometry geo = {};
+  gtk_window_set_geometry_hints(GTK_WINDOW(gtk_window_), nullptr, &geo, GDK_HINT_USER_POS);
   gtk_window_move(GTK_WINDOW(gtk_window_), pos.x, pos.y);
   return {};
 }
