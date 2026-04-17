@@ -11,6 +11,7 @@
 #include "bridge/invoke_bus.h"
 #include "webview/win32_webview_host.h"
 #include "viewshell/runtime_state.h"
+#include "host/window_api_bootstrap.h"
 
 namespace viewshell {
 
@@ -202,6 +203,7 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
   host->always_on_top_ = options.always_on_top;
   host->show_in_taskbar_ = options.show_in_taskbar;
   host->resizable_ = options.resizable;
+  host->inject_window_api_ = options.inject_window_api;
   host->webview_host_ = std::make_unique<Win32WebviewHost>();
   host->invoke_bus_ = std::make_unique<InvokeBus>();
   host->webview_host_->set_transparent_background(options.borderless);
@@ -238,6 +240,54 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
       return;
     }
     if (kind == "invoke") {
+      // Handle built-in __wnd.* commands
+      if (host_ptr->inject_window_api_ && name.rfind("__wnd.", 0) == 0) {
+        Json result_payload;
+        Result<void> ok = tl::unexpected(Error{"unknown_command", "unknown __wnd command: " + name});
+        if (name == "__wnd.startDrag") {
+          ReleaseCapture();
+          SendMessageW(host_ptr->hwnd_, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+          ok = {};
+          result_payload = Json{{"ok", true}};
+        } else if (name == "__wnd.setPosition") {
+          int px = payload.value("x", 0);
+          int py = payload.value("y", 0);
+          ok = host_ptr->set_position({px, py});
+          result_payload = Json{{"ok", true}};
+        } else if (name == "__wnd.setSize") {
+          int sw = payload.value("width", 0);
+          int sh = payload.value("height", 0);
+          ok = host_ptr->set_size({sw, sh});
+          result_payload = Json{{"ok", true}};
+        } else if (name == "__wnd.setGeometry") {
+          int gx = payload.value("x", 0);
+          int gy = payload.value("y", 0);
+          int gw = payload.value("width", 0);
+          int gh = payload.value("height", 0);
+          ok = host_ptr->set_geometry({gx, gy, gw, gh});
+          result_payload = Json{{"ok", true}};
+        } else if (name == "__wnd.getGeometry") {
+          auto geo = host_ptr->get_geometry();
+          if (geo) {
+            ok = {};
+            result_payload = Json{{"x", geo->x}, {"y", geo->y}, {"width", geo->width}, {"height", geo->height}};
+          } else {
+            ok = tl::unexpected(geo.error());
+          }
+        } else if (name == "__wnd.close") {
+          ok = host_ptr->close();
+          result_payload = Json{{"ok", true}};
+        }
+        Json message_out{{"kind", "invoke_result"}, {"name", name}, {"ok", static_cast<bool>(ok)}, {"payload", ok ? result_payload : Json::object()}};
+        if (request_id_it != parsed.end() && request_id_it->is_number_unsigned()) {
+          message_out["requestId"] = *request_id_it;
+        }
+        if (!ok) {
+          message_out["error"] = Json{{"code", ok.error().code}, {"message", ok.error().message}};
+        }
+        (void)host_ptr->webview_host_->post_json_message(message_out.dump());
+        return;
+      }
       auto result = host_ptr->invoke_bus_->dispatch(name, payload);
       Json message_out{{"kind", "invoke_result"}, {"name", name}, {"ok", static_cast<bool>(result)}, {"payload", result ? *result : Json::object()}};
       if (request_id_it != parsed.end() && request_id_it->is_number_unsigned()) {
@@ -315,6 +365,10 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
     (void)host->webview_host_->add_init_script(kWindowsBridgeBootstrap);
   } else {
     (void)host->webview_host_->add_init_script(kWindowsBridgeBootstrap);
+  }
+
+  if (host->inject_window_api_) {
+    (void)host->webview_host_->add_init_script(kWindowApiBootstrap);
   }
 
   if (options.asset_root.has_value() && !options.asset_root->empty()) {

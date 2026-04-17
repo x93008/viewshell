@@ -86,6 +86,7 @@ private:
   bool borderless_ = false;
   bool always_on_top_ = false;
   bool show_in_taskbar_ = true;
+  bool inject_window_api_ = false;
 };
 
 } // namespace viewshell

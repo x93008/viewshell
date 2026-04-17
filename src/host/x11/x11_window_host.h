@@ -68,6 +68,7 @@ private:
   std::unique_ptr<WindowDriver> window_driver_;
   std::unique_ptr<WebviewDriver> webview_driver_;
   std::unordered_set<std::string> subscribed_events_;
+  bool inject_window_api_ = false;
 };
 
 } // namespace viewshell

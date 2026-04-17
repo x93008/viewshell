@@ -1,16 +1,9 @@
 #include <viewshell/application.h>
 #include <viewshell/window_handle.h>
-#include <viewshell/bridge_handle.h>
 
 #include <cstdio>
 
 #include "../common/example_asset_path.h"
-
-static viewshell::Geometry centered_geometry(const viewshell::Geometry& current, int width, int height) {
-  int cx = current.x + current.width / 2;
-  int cy = current.y + current.height / 2;
-  return {cx - width / 2, cy - height / 2, width, height};
-}
 
 int main(int argc, char* argv[]) {
   auto asset_path = viewshell::examples::resolve_example_asset_path(argv[0], "index.html");
@@ -29,6 +22,7 @@ int main(int argc, char* argv[]) {
   opts.always_on_top = true;
   opts.show_in_taskbar = false;
   opts.resizable = false;
+  opts.inject_window_api = true;
   opts.x = 200;
   opts.y = 200;
 
@@ -38,29 +32,6 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   window->set_title("Hover Test");
-
-  auto bridge = window->bridge();
-  if (bridge) {
-    bridge->register_command("hover.expand",
-      [win = *window](const viewshell::Json&) mutable -> viewshell::Result<viewshell::Json> {
-        auto geo = win.get_geometry();
-        if (!geo) return tl::unexpected(geo.error());
-        auto expanded = centered_geometry(*geo, geo->width + 40, geo->height + 40);
-        auto r = win.set_geometry(expanded);
-        if (!r) return tl::unexpected(r.error());
-        return viewshell::Json{{"ok", true}};
-      });
-
-    bridge->register_command("hover.shrink",
-      [win = *window](const viewshell::Json&) mutable -> viewshell::Result<viewshell::Json> {
-        auto geo = win.get_geometry();
-        if (!geo) return tl::unexpected(geo.error());
-        auto shrunk = centered_geometry(*geo, geo->width - 40, geo->height - 40);
-        auto r = win.set_geometry(shrunk);
-        if (!r) return tl::unexpected(r.error());
-        return viewshell::Json{{"ok", true}};
-      });
-  }
 
   auto run_result = app->run();
   if (!run_result) {

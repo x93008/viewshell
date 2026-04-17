@@ -77,6 +77,7 @@ private:
   bool always_on_top_ = false;
   bool show_in_taskbar_ = true;
   bool resizable_ = true;
+  bool inject_window_api_ = false;
   Size size_{};
   Position position_{};
 };
