@@ -108,7 +108,8 @@ int main(int argc, char* argv[]) {
     std::string debug = "get_icon_rect: ";
     if (rect) {
       debug += "x=" + std::to_string(rect->x) + " y=" + std::to_string(rect->y)
-        + " w=" + std::to_string(rect->width) + " h=" + std::to_string(rect->height);
+        + " w=" + std::to_string(rect->width) + " h=" + std::to_string(rect->height)
+        + " (scaled)";
       x = rect->x + (rect->width - popup_w) / 2;
       y = rect->y - popup_h;
       if (y < 0) y = rect->y + rect->height;

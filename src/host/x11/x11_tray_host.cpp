@@ -144,13 +144,17 @@ Result<Geometry> X11TrayHost::get_icon_rect() const {
     return tl::unexpected(Error{"icon_rect_failed",
         "gtk_status_icon_get_geometry failed"});
   }
-  // Convert physical pixels to logical coordinates for HiDPI
+  // gtk_status_icon_get_geometry returns physical pixel coordinates,
+  // but gtk_window_move uses logical coordinates. Divide by scale factor.
   int scale = 1;
-  if (screen) {
-    scale = gdk_screen_get_monitor_scale_factor(screen,
-        gdk_screen_get_monitor_at_point(screen, area.x, area.y));
-    if (scale < 1) scale = 1;
+  GdkDisplay* display = gdk_display_get_default();
+  if (display) {
+    GdkMonitor* monitor = gdk_display_get_monitor_at_point(display, area.x, area.y);
+    if (monitor) {
+      scale = gdk_monitor_get_scale_factor(monitor);
+    }
   }
+  if (scale < 1) scale = 1;
   return Geometry{area.x / scale, area.y / scale, area.width / scale, area.height / scale};
 }
 
