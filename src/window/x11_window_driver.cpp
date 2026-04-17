@@ -115,9 +115,8 @@ Result<Size> WindowDriver::get_size() const {
 
 Result<void> WindowDriver::set_position(Position pos) {
   if (!created_) return tl::unexpected(Error{"window_not_ready", ""});
-  // Set user position hint so window manager respects the position
-  GdkGeometry geo = {};
-  gtk_window_set_geometry_hints(GTK_WINDOW(gtk_window_), nullptr, &geo, GDK_HINT_USER_POS);
+  pending_position_ = pos;
+  has_pending_position_ = true;
   gtk_window_move(GTK_WINDOW(gtk_window_), pos.x, pos.y);
   return {};
 }
@@ -168,6 +167,11 @@ Result<void> WindowDriver::unminimize() {
 Result<void> WindowDriver::show() {
   if (!created_) return tl::unexpected(Error{"window_not_ready", ""});
   gtk_widget_show_all(gtk_window_);
+  // Re-apply position after show, because WM may ignore position set on hidden windows
+  if (has_pending_position_) {
+    gtk_window_move(GTK_WINDOW(gtk_window_), pending_position_.x, pending_position_.y);
+    has_pending_position_ = false;
+  }
   return {};
 }
 

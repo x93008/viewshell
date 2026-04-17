@@ -41,6 +41,8 @@ public:
 private:
   GtkWidget* gtk_window_ = nullptr;
   bool created_ = false;
+  bool has_pending_position_ = false;
+  Position pending_position_{};
 };
 
 }
