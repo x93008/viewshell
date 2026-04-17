@@ -19,6 +19,7 @@ public:
   Result<void> set_icon(std::string_view icon_path);
   Result<void> set_tooltip(std::string_view tooltip);
   Result<void> set_menu(std::vector<TrayMenuItem> menu);
+  Result<Geometry> get_icon_rect() const;
   Result<void> remove();
 
 private:

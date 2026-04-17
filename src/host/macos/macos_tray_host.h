@@ -23,6 +23,7 @@ public:
   Result<void> set_icon(std::string_view icon_path) override;
   Result<void> set_tooltip(std::string_view tooltip) override;
   Result<void> set_menu(std::vector<TrayMenuItem> menu) override;
+  Result<Geometry> get_icon_rect() const override;
   Result<void> remove() override;
 
   // Called by ViewshellTrayDelegate

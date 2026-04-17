@@ -177,6 +177,26 @@ Result<void> MacOSTrayHost::set_menu(std::vector<TrayMenuItem> menu) {
   return {};
 }
 
+Result<Geometry> MacOSTrayHost::get_icon_rect() const {
+  if (!status_item_) {
+    return tl::unexpected(Error{"invalid_state", "tray is not available"});
+  }
+  NSStatusItem* item = (NSStatusItem*)status_item_;
+  NSWindow* window = [[item button] window];
+  if (!window) {
+    return tl::unexpected(Error{"icon_rect_failed",
+        "status item window is not available"});
+  }
+  NSRect frame = [window frame];
+  int screen_height = static_cast<int>([[NSScreen mainScreen] frame].size.height);
+  int flipped_y = screen_height - static_cast<int>(frame.origin.y) - static_cast<int>(frame.size.height);
+  return Geometry{
+      static_cast<int>(frame.origin.x),
+      flipped_y,
+      static_cast<int>(frame.size.width),
+      static_cast<int>(frame.size.height)};
+}
+
 Result<void> MacOSTrayHost::remove() {
   if (status_item_) {
     [[NSStatusBar systemStatusBar] removeStatusItem:(NSStatusItem*)status_item_];

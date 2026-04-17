@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; background: transparent; }
+    .menu {
+      width: 100%; border-radius: 8px; overflow: hidden;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      padding: 4px 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 13px; color: #222;
+    }
+    .menu-item {
+      padding: 8px 16px; cursor: default; user-select: none;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .menu-item:hover { background: #3E7CFA; color: white; }
+    .menu-item .icon { width: 16px; text-align: center; font-size: 14px; }
+    .menu-sep { height: 1px; background: #e0e0e0; margin: 4px 8px; }
+    .menu-item.danger:hover { background: #d93a54; }
+  </style>
+</head>
+<body>
+  <div class="menu" id="menu">
+    <div class="menu-item" data-id="show"><span class="icon">&#128065;</span> Show Window</div>
+    <div class="menu-item" data-id="about"><span class="icon">&#9432;</span> About</div>
+    <div class="menu-sep"></div>
+    <div class="menu-item" data-id="toggle"><span class="icon">&#9881;</span> Toggle Something</div>
+    <div class="menu-sep"></div>
+    <div class="menu-item danger" data-id="quit"><span class="icon">&#10005;</span> Quit</div>
+  </div>
+  <script>
+    document.querySelectorAll('.menu-item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        var id = item.getAttribute('data-id');
+        if (window.__viewshell) {
+          window.__viewshell.invoke('menu.click', { id: id });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -129,6 +129,18 @@ Result<void> X11TrayHost::set_menu(std::vector<TrayMenuItem> menu) {
   return {};
 }
 
+Result<Geometry> X11TrayHost::get_icon_rect() const {
+  if (!icon_) {
+    return tl::unexpected(Error{"Tray icon not initialized"});
+  }
+  GdkRectangle area = {};
+  if (!gtk_status_icon_get_geometry(icon_, nullptr, &area, nullptr)) {
+    return tl::unexpected(Error{"icon_rect_failed",
+        "gtk_status_icon_get_geometry failed"});
+  }
+  return Geometry{area.x, area.y, area.width, area.height};
+}
+
 Result<void> X11TrayHost::remove() {
   if (icon_) {
     gtk_status_icon_set_visible(icon_, FALSE);

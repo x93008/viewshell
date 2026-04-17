@@ -209,6 +209,26 @@ void Win32TrayHost::rebuild_menu() {
   }
 }
 
+Result<Geometry> Win32TrayHost::get_icon_rect() const {
+  NOTIFYICONIDENTIFIER nii = {};
+  nii.cbSize = sizeof(nii);
+  nii.hWnd = hwnd_;
+  nii.uID = 1;
+
+  RECT rect = {};
+  HRESULT hr = Shell_NotifyIconGetRect(&nii, &rect);
+  if (FAILED(hr)) {
+    return tl::unexpected(Error{"icon_rect_failed",
+        "Shell_NotifyIconGetRect failed"});
+  }
+
+  return Geometry{
+      static_cast<int>(rect.left),
+      static_cast<int>(rect.top),
+      static_cast<int>(rect.right - rect.left),
+      static_cast<int>(rect.bottom - rect.top)};
+}
+
 Result<void> Win32TrayHost::remove() {
   if (nid_.hWnd) {
     Shell_NotifyIconW(NIM_DELETE, &nid_);

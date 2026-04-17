@@ -21,6 +21,11 @@ Result<void> TrayHandle::set_menu(std::vector<TrayMenuItem> menu) {
   return host_->set_menu(std::move(menu));
 }
 
+Result<Geometry> TrayHandle::get_icon_rect() const {
+  if (!host_) return tl::unexpected(Error{"invalid_state", "tray not available"});
+  return host_->get_icon_rect();
+}
+
 Result<void> TrayHandle::remove() {
   if (!host_) return tl::unexpected(Error{"invalid_state", "tray not available"});
   auto result = host_->remove();
