@@ -118,7 +118,8 @@ int main(int argc, char* argv[]) {
     }
     debug += " -> pos=(" + std::to_string(x) + "," + std::to_string(y) + ")";
     shared->main_window.set_title(debug);
-    shared->menu_window.set_geometry({x, y, popup_w, popup_h});
+    // Debug: force a known position to test gtk_window_move accuracy
+    shared->menu_window.set_geometry({100, 100, popup_w, popup_h});
     shared->menu_window.show();
     shared->menu_window.focus();
     shared->menu_visible = true;
