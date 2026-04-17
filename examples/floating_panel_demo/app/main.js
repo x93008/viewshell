@@ -27,29 +27,30 @@
 
   var shell = document.getElementById('floatingShell');
   var colorToggle = document.getElementById('colorToggle');
+  var currentState = 'compact';
 
   function transition(state) {
+    if (state === currentState) return;
     if (!window.__viewshell) return;
+    currentState = state;
     window.__viewshell.invoke('demo.floatingTransition', { state: state });
     shell.classList.remove('compact', 'hover', 'expanded');
     shell.classList.add(state);
   }
 
-  shell.addEventListener('mouseenter', function () {
-    if (!shell.classList.contains('expanded')) {
+  document.addEventListener('mouseenter', function () {
+    if (currentState === 'compact') {
       transition('hover');
     }
   });
 
-  shell.addEventListener('mouseleave', function () {
-    if (!shell.classList.contains('expanded')) {
-      transition('compact');
-    }
+  document.addEventListener('mouseleave', function () {
+    transition('compact');
   });
 
   shell.addEventListener('mousedown', function (event) {
     if (event.target === colorToggle) return;
-    if (!shell.classList.contains('expanded')) {
+    if (currentState !== 'expanded') {
       transition('expanded');
       return;
     }
