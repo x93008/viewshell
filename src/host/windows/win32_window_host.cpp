@@ -186,35 +186,6 @@ LRESULT CALLBACK Win32WindowHost::WindowProc(HWND hwnd, UINT message, WPARAM wpa
     (void)self->webview_host_->set_bounds(rect);
   }
 
-  if (message == WM_MOUSEMOVE) {
-    TRACKMOUSEEVENT track{};
-    track.cbSize = sizeof(track);
-    track.dwFlags = TME_LEAVE;
-    track.hwndTrack = hwnd;
-    TrackMouseEvent(&track);
-  }
-
-  if (message == WM_MOUSELEAVE) {
-    if (self->subscribed_events_.count("host-mouseleave")) {
-      Json payload{{"kind", "native_event"}, {"name", "host-mouseleave"}, {"payload", Json::object()}};
-      (void)self->webview_host_->post_json_message(payload.dump());
-    }
-    return 0;
-  }
-
-  if (message == WM_TIMER && wparam == 1) {
-    if (!IsWindowVisible(hwnd)) return 0;
-    POINT pt;
-    GetCursorPos(&pt);
-    RECT rect;
-    GetWindowRect(hwnd, &rect);
-    if (!PtInRect(&rect, pt) && self->webview_host_) {
-      Json payload{{"kind", "native_event"}, {"name", "host-mouseleave"}, {"payload", Json::object()}};
-      (void)self->webview_host_->post_json_message(payload.dump());
-    }
-    return 0;
-  }
-
   return DefWindowProcW(hwnd, message, wparam, lparam);
 }
 
@@ -333,7 +304,6 @@ Result<std::shared_ptr<Win32WindowHost>> Win32WindowHost::create(
   if (host->borderless_) {
     MARGINS margins = {-1, -1, -1, -1};
     DwmExtendFrameIntoClientArea(host->hwnd_, &margins);
-    SetTimer(host->hwnd_, 1, 100, nullptr);
   }
 
   auto attach_result = host->webview_host_->attach(host->hwnd_, options);
