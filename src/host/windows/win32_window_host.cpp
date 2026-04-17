@@ -422,7 +422,7 @@ Result<void> Win32WindowHost::unminimize() {
 
 Result<void> Win32WindowHost::show() {
   if (auto result = ensure_window(); !result) return result;
-  ShowWindow(hwnd_, SW_SHOW);
+  ShowWindow(hwnd_, IsIconic(hwnd_) ? SW_RESTORE : SW_SHOW);
   return {};
 }
 
@@ -434,8 +434,18 @@ Result<void> Win32WindowHost::hide() {
 
 Result<void> Win32WindowHost::focus() {
   if (auto result = ensure_window(); !result) return result;
+  // Attach to foreground thread to bypass SetForegroundWindow restrictions
+  DWORD fg_thread = GetWindowThreadProcessId(GetForegroundWindow(), nullptr);
+  DWORD my_thread = GetCurrentThreadId();
+  if (fg_thread != my_thread) {
+    AttachThreadInput(my_thread, fg_thread, TRUE);
+  }
   SetForegroundWindow(hwnd_);
+  BringWindowToTop(hwnd_);
   SetFocus(hwnd_);
+  if (fg_thread != my_thread) {
+    AttachThreadInput(my_thread, fg_thread, FALSE);
+  }
   return {};
 }
 
