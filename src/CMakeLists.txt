@@ -10,12 +10,14 @@ target_sources(viewshell PRIVATE
   viewshell/public_types.cpp
   viewshell/window_handle.cpp
   viewshell/bridge_handle.cpp
+  viewshell/tray_handle.cpp
 )
 
 if(WIN32)
   target_sources(viewshell PRIVATE
     runtime/win32_backend_runtime.cpp
     host/windows/win32_window_host.cpp
+    host/windows/win32_tray_host.cpp
     webview/win32_webview_host.cpp
     bridge/invoke_bus.cpp
   )
@@ -23,12 +25,14 @@ elseif(APPLE)
   target_sources(viewshell PRIVATE
     runtime/macos_backend_runtime.mm
     host/macos/macos_window_host.mm
+    host/macos/macos_tray_host.mm
     bridge/invoke_bus.cpp
   )
 else()
   target_sources(viewshell PRIVATE
     runtime/x11_backend_runtime.cpp
     host/x11/x11_window_host.cpp
+    host/x11/x11_tray_host.cpp
     window/x11_window_driver.cpp
     webview/engine_resolver.cpp
     webview/resource_protocol.cpp

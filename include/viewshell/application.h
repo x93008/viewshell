@@ -4,7 +4,9 @@
 #include <memory>
 #include <viewshell/types.h>
 #include <viewshell/options.h>
+#include <viewshell/tray_options.h>
 #include <viewshell/window_handle.h>
+#include <viewshell/tray_handle.h>
 
 namespace viewshell {
 
@@ -21,6 +23,7 @@ public:
   static Result<Application> create(const AppOptions& options);
 
   Result<WindowHandle> create_window(const WindowOptions& options);
+  Result<TrayHandle> create_tray(const TrayOptions& options);
   Result<void> post(std::function<void()> task);
   Result<int> run();
 

@@ -54,6 +54,28 @@ Result<WindowHandle> Application::create_window(const WindowOptions& options) {
   return WindowHandle(window_state);
 }
 
+Result<TrayHandle> Application::create_tray(const TrayOptions& options) {
+  if (!backend_runtime_) {
+    backend_runtime_ = BackendFactory::create();
+  }
+  if (!backend_runtime_) {
+    return tl::unexpected(Error{"unsupported_by_backend",
+        "backend runtime is not available"});
+  }
+  if (app_state_->tray) {
+    return tl::unexpected(Error{"invalid_state",
+        "a system tray already exists"});
+  }
+
+  auto host = backend_runtime_->create_tray(options);
+  if (!host) {
+    return tl::unexpected(host.error());
+  }
+
+  app_state_->tray = *host;
+  return TrayHandle(*host);
+}
+
 Result<void> Application::post(std::function<void()> task) {
   if (!backend_runtime_) {
     return tl::unexpected(Error{"invalid_state",

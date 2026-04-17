@@ -5,6 +5,7 @@
 #include <mutex>
 
 #include "host/windows/win32_window_host.h"
+#include "host/windows/win32_tray_host.h"
 #include "viewshell/runtime_state.h"
 
 namespace viewshell {
@@ -22,6 +23,13 @@ Result<std::shared_ptr<WindowHost>> Win32BackendRuntime::create_window(
 
   active_hosts_.push_back(*host);
   return std::static_pointer_cast<WindowHost>(*host);
+}
+
+Result<std::shared_ptr<TrayHost>> Win32BackendRuntime::create_tray(
+    const TrayOptions& options) {
+  auto tray = Win32TrayHost::create(options);
+  if (!tray) return tl::unexpected(tray.error());
+  return std::shared_ptr<TrayHost>(*tray);
 }
 
 Result<void> Win32BackendRuntime::post(std::shared_ptr<RuntimeAppState> app_state,

@@ -18,6 +18,9 @@ public:
       const NormalizedAppOptions& app_options,
       const WindowOptions& window_options) override;
 
+  Result<std::shared_ptr<TrayHost>> create_tray(
+      const TrayOptions& options) override;
+
   Result<void> post(std::shared_ptr<RuntimeAppState> app_state,
       std::function<void()> task) override;
 

@@ -5,6 +5,7 @@
 #include <mutex>
 
 #include "host/macos/macos_window_host.h"
+#include "host/macos/macos_tray_host.h"
 #include "viewshell/runtime_state.h"
 
 namespace viewshell {
@@ -21,6 +22,13 @@ Result<std::shared_ptr<WindowHost>> MacOSBackendRuntime::create_window(
   }
   active_hosts_.push_back(*host);
   return std::static_pointer_cast<WindowHost>(*host);
+}
+
+Result<std::shared_ptr<TrayHost>> MacOSBackendRuntime::create_tray(
+    const TrayOptions& options) {
+  auto tray = MacOSTrayHost::create(options);
+  if (!tray) return tl::unexpected(tray.error());
+  return std::shared_ptr<TrayHost>(*tray);
 }
 
 Result<void> MacOSBackendRuntime::post(std::shared_ptr<RuntimeAppState> app_state,

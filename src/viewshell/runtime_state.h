@@ -15,6 +15,7 @@
 namespace viewshell {
 
 class WindowHost;
+class TrayHost;
 struct RuntimeWindowState;
 
 struct RuntimeAppState {
@@ -27,6 +28,7 @@ struct RuntimeAppState {
   std::condition_variable cv;
   std::vector<std::string> logs;
   std::vector<std::shared_ptr<RuntimeWindowState>> windows;
+  std::shared_ptr<TrayHost> tray;
 };
 
 struct RuntimeWindowState {
