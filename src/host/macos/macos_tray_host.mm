@@ -200,11 +200,11 @@ Result<Geometry> MacOSTrayHost::get_icon_rect() const {
         "status item window is not available"});
   }
   NSRect frame = [window frame];
-  int screen_height = static_cast<int>([[NSScreen mainScreen] frame].size.height);
-  int flipped_y = screen_height - static_cast<int>(frame.origin.y) - static_cast<int>(frame.size.height);
+  // Return in native macOS coordinates (origin at bottom-left)
+  // consistent with set_position / get_geometry
   return Geometry{
       static_cast<int>(frame.origin.x),
-      flipped_y,
+      static_cast<int>(frame.origin.y),
       static_cast<int>(frame.size.width),
       static_cast<int>(frame.size.height)};
 }
