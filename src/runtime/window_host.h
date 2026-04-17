@@ -1,8 +1,11 @@
 #pragma once
 
+#include <string>
 #include <string_view>
+#include <unordered_set>
 
 #include <viewshell/capabilities.h>
+#include <viewshell/options.h>
 #include <viewshell/types.h>
 
 namespace viewshell {
@@ -40,6 +43,21 @@ public:
   virtual Result<Capabilities> capabilities() const = 0;
   virtual Result<void> register_command(std::string name, CommandHandler handler) = 0;
   virtual Result<void> emit(std::string name, const Json& payload) = 0;
+  virtual void begin_drag() {}
+
+  // Handle built-in __wnd.* invoke commands.
+  // Returns true if the command was handled, false if not a __wnd command.
+  bool handle_wnd_command(const std::string& name, const Json& payload, Json& out_payload, Result<void>& out_result);
+
+protected:
+  void apply_common_options(const WindowOptions& options);
+
+  bool borderless_ = false;
+  bool always_on_top_ = false;
+  bool show_in_taskbar_ = true;
+  bool resizable_ = true;
+  bool inject_window_api_ = false;
+  std::unordered_set<std::string> subscribed_events_;
 };
 
 } // namespace viewshell

@@ -241,10 +241,7 @@ Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
 
   auto host = std::shared_ptr<MacOSWindowHost>(
       new MacOSWindowHost(std::move(app_state), std::move(window_state)));
-  host->borderless_ = options.borderless;
-  host->always_on_top_ = options.always_on_top;
-  host->show_in_taskbar_ = options.show_in_taskbar;
-  host->inject_window_api_ = options.inject_window_api;
+  host->apply_common_options(options);
   host->invoke_bus_ = std::make_unique<InvokeBus>();
 
   NSRect rect = NSMakeRect(options.x.value_or(100), options.y.value_or(100), options.width, options.height);
@@ -574,51 +571,20 @@ void MacOSWindowHost::handle_script_message(std::string_view message) {
   }
   if (kind == "invoke") {
     // Handle built-in __wnd.* commands
-    if (inject_window_api_ && name.rfind("__wnd.", 0) == 0) {
+    if (name.rfind("__wnd.", 0) == 0) {
       Json result_payload;
-      Result<void> ok = tl::unexpected(Error{"unknown_command", "unknown __wnd command: " + name});
-      if (name == "__wnd.startDrag") {
-        begin_drag();
-        ok = {};
-        result_payload = Json{{"ok", true}};
-      } else if (name == "__wnd.setPosition") {
-        int px = payload.value("x", 0);
-        int py = payload.value("y", 0);
-        ok = set_position({px, py});
-        result_payload = Json{{"ok", true}};
-      } else if (name == "__wnd.setSize") {
-        int sw = payload.value("width", 0);
-        int sh = payload.value("height", 0);
-        ok = set_size({sw, sh});
-        result_payload = Json{{"ok", true}};
-      } else if (name == "__wnd.setGeometry") {
-        int gx = payload.value("x", 0);
-        int gy = payload.value("y", 0);
-        int gw = payload.value("width", 0);
-        int gh = payload.value("height", 0);
-        ok = set_geometry({gx, gy, gw, gh});
-        result_payload = Json{{"ok", true}};
-      } else if (name == "__wnd.getGeometry") {
-        auto geo = get_geometry();
-        if (geo) {
-          ok = {};
-          result_payload = Json{{"x", geo->x}, {"y", geo->y}, {"width", geo->width}, {"height", geo->height}};
-        } else {
-          ok = tl::unexpected(geo.error());
+      Result<void> ok;
+      if (handle_wnd_command(name, payload, result_payload, ok)) {
+        Json message_out{{"kind", "invoke_result"}, {"name", name}, {"ok", static_cast<bool>(ok)}, {"payload", ok ? result_payload : Json::object()}};
+        if (request_id_it != parsed.end() && request_id_it->is_number_unsigned()) {
+          message_out["requestId"] = *request_id_it;
         }
-      } else if (name == "__wnd.close") {
-        ok = close();
-        result_payload = Json{{"ok", true}};
+        if (!ok) {
+          message_out["error"] = Json{{"code", ok.error().code}, {"message", ok.error().message}};
+        }
+        dispatch_json_to_page(message_out);
+        return;
       }
-      Json message_out{{"kind", "invoke_result"}, {"name", name}, {"ok", static_cast<bool>(ok)}, {"payload", ok ? result_payload : Json::object()}};
-      if (request_id_it != parsed.end() && request_id_it->is_number_unsigned()) {
-        message_out["requestId"] = *request_id_it;
-      }
-      if (!ok) {
-        message_out["error"] = Json{{"code", ok.error().code}, {"message", ok.error().message}};
-      }
-      dispatch_json_to_page(message_out);
-      return;
     }
     auto result = invoke_bus_->dispatch(name, payload);
     Json message_out{{"kind", "invoke_result"}, {"name", name}, {"ok", static_cast<bool>(result)}, {"payload", result ? *result : Json::object()}};

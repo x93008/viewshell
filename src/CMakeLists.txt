@@ -5,6 +5,7 @@ target_include_directories(viewshell PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_sources(viewshell PRIVATE
   runtime/backend_factory.cpp
+  runtime/window_host.cpp
   viewshell/application.cpp
   viewshell/public_types.cpp
   viewshell/window_handle.cpp

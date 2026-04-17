@@ -46,7 +46,7 @@ Result<std::shared_ptr<X11WindowHost>> X11WindowHost::create(
   host->webview_driver_ = std::make_unique<WebviewDriver>();
   host->bridge_driver_ = std::make_unique<BridgeDriver>();
   host->invoke_bus_ = std::make_unique<InvokeBus>();
-  host->inject_window_api_ = options.inject_window_api;
+  host->apply_common_options(options);
 
   host->window_driver_->on_close = [app_state = weak_app_state,
                                        window_state = weak_window_state,
@@ -100,51 +100,20 @@ Result<std::shared_ptr<X11WindowHost>> X11WindowHost::create(
 
     if (kind == "invoke") {
       // Handle built-in __wnd.* commands
-      if (host_ptr->inject_window_api_ && name.rfind("__wnd.", 0) == 0) {
+      if (name.rfind("__wnd.", 0) == 0) {
         Json result_payload;
-        Result<void> ok = tl::unexpected(Error{"unknown_command", "unknown __wnd command: " + name});
-        if (name == "__wnd.startDrag") {
-          // X11/GTK drag not implemented via this path
-          ok = {};
-          result_payload = Json{{"ok", true}};
-        } else if (name == "__wnd.setPosition") {
-          int px = payload.value("x", 0);
-          int py = payload.value("y", 0);
-          ok = host_ptr->set_position({px, py});
-          result_payload = Json{{"ok", true}};
-        } else if (name == "__wnd.setSize") {
-          int sw = payload.value("width", 0);
-          int sh = payload.value("height", 0);
-          ok = host_ptr->set_size({sw, sh});
-          result_payload = Json{{"ok", true}};
-        } else if (name == "__wnd.setGeometry") {
-          int gx = payload.value("x", 0);
-          int gy = payload.value("y", 0);
-          int gw = payload.value("width", 0);
-          int gh = payload.value("height", 0);
-          ok = host_ptr->set_geometry({gx, gy, gw, gh});
-          result_payload = Json{{"ok", true}};
-        } else if (name == "__wnd.getGeometry") {
-          auto geo = host_ptr->get_geometry();
-          if (geo) {
-            ok = {};
-            result_payload = Json{{"x", geo->x}, {"y", geo->y}, {"width", geo->width}, {"height", geo->height}};
-          } else {
-            ok = tl::unexpected(geo.error());
+        Result<void> ok;
+        if (host_ptr->handle_wnd_command(name, payload, result_payload, ok)) {
+          Json message{{"kind", "invoke_result"}, {"name", name}, {"ok", static_cast<bool>(ok)}, {"payload", ok ? result_payload : Json::object()}};
+          if (request_id_it != parsed.end() && request_id_it->is_number_unsigned()) {
+            message["requestId"] = *request_id_it;
           }
-        } else if (name == "__wnd.close") {
-          ok = host_ptr->close();
-          result_payload = Json{{"ok", true}};
+          if (!ok) {
+            message["error"] = Json{{"code", ok.error().code}, {"message", ok.error().message}};
+          }
+          (void)bridge->post_to_page(message.dump());
+          return;
         }
-        Json message{{"kind", "invoke_result"}, {"name", name}, {"ok", static_cast<bool>(ok)}, {"payload", ok ? result_payload : Json::object()}};
-        if (request_id_it != parsed.end() && request_id_it->is_number_unsigned()) {
-          message["requestId"] = *request_id_it;
-        }
-        if (!ok) {
-          message["error"] = Json{{"code", ok.error().code}, {"message", ok.error().message}};
-        }
-        (void)bridge->post_to_page(message.dump());
-        return;
       }
       auto result = invoke_bus->dispatch(name, payload);
       Json message{{"kind", "invoke_result"}, {"name", name},

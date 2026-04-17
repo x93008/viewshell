@@ -3,7 +3,6 @@
 #ifdef _WIN32
 
 #include <memory>
-#include <unordered_set>
 #include <windows.h>
 
 #include <viewshell/options.h>
@@ -57,6 +56,7 @@ public:
   Result<Capabilities> capabilities() const override;
   Result<void> register_command(std::string name, CommandHandler handler) override;
   Result<void> emit(std::string name, const Json& payload) override;
+  void begin_drag() override;
 
 private:
   Win32WindowHost(std::shared_ptr<RuntimeAppState> app_state,
@@ -71,13 +71,7 @@ private:
   std::weak_ptr<RuntimeWindowState> window_state_;
   std::unique_ptr<Win32WebviewHost> webview_host_;
   std::unique_ptr<InvokeBus> invoke_bus_;
-  std::unordered_set<std::string> subscribed_events_;
   HWND hwnd_ = nullptr;
-  bool borderless_ = false;
-  bool always_on_top_ = false;
-  bool show_in_taskbar_ = true;
-  bool resizable_ = true;
-  bool inject_window_api_ = false;
   Size size_{};
   Position position_{};
 };
