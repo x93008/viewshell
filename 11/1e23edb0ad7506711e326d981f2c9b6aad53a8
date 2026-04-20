@@ -1,0 +1,23 @@
+examples/custom_tray_demo/app/menu.html
+  2df74f94968d2824 45-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.5",
+  "base_commit_sha": "111e23edb0ad7506711e326d981f2c9b6aad53a8",
+  "prompts": {
+    "2df74f94968d2824": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_269dc1f82ffet6vmItQALRVsfj",
+        "model": "cchClaude/claude-opus-4-6"
+      },
+      "human_author": "lixingxin",
+      "messages": [],
+      "total_additions": 5,
+      "total_deletions": 0,
+      "accepted_lines": 5,
+      "overriden_lines": 0
+    }
+  }
+}
