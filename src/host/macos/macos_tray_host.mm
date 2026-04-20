@@ -209,6 +209,42 @@ Result<Geometry> MacOSTrayHost::get_icon_rect() const {
       static_cast<int>(frame.size.height)};
 }
 
+Result<Position> MacOSTrayHost::get_popup_position(int popup_width, int popup_height) const {
+  if (!status_item_) {
+    return tl::unexpected(Error{"invalid_state", "tray is not available"});
+  }
+  NSStatusItem* item = (NSStatusItem*)status_item_;
+  NSWindow* window = [[item button] window];
+  if (!window) {
+    return tl::unexpected(Error{"icon_rect_failed",
+        "status item window is not available"});
+  }
+
+  NSRect icon_frame = [window frame];
+
+  // Popup goes below the status bar icon (in native coords, below = lower Y)
+  int popup_y = static_cast<int>(icon_frame.origin.y) - popup_height;
+  int popup_x = static_cast<int>(icon_frame.origin.x + (icon_frame.size.width - popup_width) / 2.0);
+
+  // Clamp to visible screen area
+  NSRect visible = [[NSScreen mainScreen] visibleFrame];
+  int vis_left = static_cast<int>(visible.origin.x);
+  int vis_bottom = static_cast<int>(visible.origin.y);
+  int vis_right = vis_left + static_cast<int>(visible.size.width);
+  int vis_top = vis_bottom + static_cast<int>(visible.size.height);
+
+  if (popup_x + popup_width > vis_right)
+    popup_x = vis_right - popup_width;
+  if (popup_x < vis_left)
+    popup_x = vis_left;
+  if (popup_y < vis_bottom)
+    popup_y = vis_bottom;
+  if (popup_y + popup_height > vis_top)
+    popup_y = vis_top - popup_height;
+
+  return Position{popup_x, popup_y};
+}
+
 Result<void> MacOSTrayHost::remove() {
   if (status_item_) {
     [[NSStatusBar systemStatusBar] removeStatusItem:(NSStatusItem*)status_item_];

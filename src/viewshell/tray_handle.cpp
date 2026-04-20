@@ -26,6 +26,11 @@ Result<Geometry> TrayHandle::get_icon_rect() const {
   return host_->get_icon_rect();
 }
 
+Result<Position> TrayHandle::get_popup_position(int popup_width, int popup_height) const {
+  if (!host_) return tl::unexpected(Error{"invalid_state", "tray not available"});
+  return host_->get_popup_position(popup_width, popup_height);
+}
+
 Result<void> TrayHandle::remove() {
   if (!host_) return tl::unexpected(Error{"invalid_state", "tray not available"});
   auto result = host_->remove();

@@ -25,6 +25,7 @@ public:
   Result<void> set_tooltip(std::string_view tooltip) override;
   Result<void> set_menu(std::vector<TrayMenuItem> menu) override;
   Result<Geometry> get_icon_rect() const override;
+  Result<Position> get_popup_position(int popup_width, int popup_height) const override;
   Result<void> remove() override;
 
 private:

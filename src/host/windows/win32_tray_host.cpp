@@ -258,6 +258,72 @@ Result<Geometry> Win32TrayHost::get_icon_rect() const {
       static_cast<int>(rect.bottom - rect.top)};
 }
 
+Result<Position> Win32TrayHost::get_popup_position(int popup_width, int popup_height) const {
+  NOTIFYICONIDENTIFIER nii = {};
+  nii.cbSize = sizeof(nii);
+  nii.hWnd = hwnd_;
+  nii.uID = 1;
+
+  RECT icon_rect = {};
+  HRESULT hr = Shell_NotifyIconGetRect(&nii, &icon_rect);
+  if (FAILED(hr)) {
+    return tl::unexpected(Error{"icon_rect_failed",
+        "Shell_NotifyIconGetRect failed"});
+  }
+
+  RECT work_rect = {};
+  SystemParametersInfoW(SPI_GETWORKAREA, 0, &work_rect, 0);
+
+  int icon_cx = (icon_rect.left + icon_rect.right) / 2;
+  int icon_cy = (icon_rect.top + icon_rect.bottom) / 2;
+
+  int dist_top = icon_cy - work_rect.top;
+  int dist_bottom = work_rect.bottom - icon_cy;
+  int dist_left = icon_cx - work_rect.left;
+  int dist_right = work_rect.right - icon_cx;
+
+  int popup_x = 0;
+  int popup_y = 0;
+
+  int min_dist = dist_bottom;
+  int edge = 0; // 0=bottom, 1=top, 2=right, 3=left
+
+  if (dist_top < min_dist) { min_dist = dist_top; edge = 1; }
+  if (dist_right < min_dist) { min_dist = dist_right; edge = 2; }
+  if (dist_left < min_dist) { min_dist = dist_left; edge = 3; }
+
+  switch (edge) {
+    case 0: // taskbar at bottom - popup above icon
+      popup_x = icon_cx - popup_width / 2;
+      popup_y = icon_rect.top - popup_height;
+      break;
+    case 1: // taskbar at top - popup below icon
+      popup_x = icon_cx - popup_width / 2;
+      popup_y = icon_rect.bottom;
+      break;
+    case 2: // taskbar at right - popup left of icon
+      popup_x = icon_rect.left - popup_width;
+      popup_y = icon_cy - popup_height / 2;
+      break;
+    case 3: // taskbar at left - popup right of icon
+      popup_x = icon_rect.right;
+      popup_y = icon_cy - popup_height / 2;
+      break;
+  }
+
+  // Clamp to work area
+  if (popup_x + popup_width > work_rect.right)
+    popup_x = work_rect.right - popup_width;
+  if (popup_x < work_rect.left)
+    popup_x = work_rect.left;
+  if (popup_y + popup_height > work_rect.bottom)
+    popup_y = work_rect.bottom - popup_height;
+  if (popup_y < work_rect.top)
+    popup_y = work_rect.top;
+
+  return Position{popup_x, popup_y};
+}
+
 Result<void> Win32TrayHost::remove() {
   if (nid_.hWnd) {
     Shell_NotifyIconW(NIM_DELETE, &nid_);

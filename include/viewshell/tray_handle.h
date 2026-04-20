@@ -20,6 +20,7 @@ public:
   Result<void> set_tooltip(std::string_view tooltip);
   Result<void> set_menu(std::vector<TrayMenuItem> menu);
   Result<Geometry> get_icon_rect() const;
+  Result<Position> get_popup_position(int popup_width, int popup_height) const;
   Result<void> remove();
 
 private:

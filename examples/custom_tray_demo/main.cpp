@@ -101,23 +101,14 @@ int main(int argc, char* argv[]) {
   };
   tray_opts.on_right_click = [shared]() {
     if (!shared->tray) return;
-    auto rect = shared->tray->get_icon_rect();
     int popup_w = 200;
     int popup_h = 170;
+    auto pos = shared->tray->get_popup_position(popup_w, popup_h);
     int x = 0, y = 0;
-    std::string debug = "get_icon_rect: ";
-    if (rect) {
-      debug += "x=" + std::to_string(rect->x) + " y=" + std::to_string(rect->y)
-        + " w=" + std::to_string(rect->width) + " h=" + std::to_string(rect->height)
-        + " (scaled)";
-      x = rect->x + (rect->width - popup_w) / 2;
-      y = rect->y - popup_h;
-      if (y < 0) y = rect->y + rect->height;
-    } else {
-      debug += "FAILED: " + rect.error().message;
+    if (pos) {
+      x = pos->x;
+      y = pos->y;
     }
-    debug += " -> pos=(" + std::to_string(x) + "," + std::to_string(y) + ")";
-    shared->main_window.set_title(debug);
     shared->menu_window.set_geometry({x, y, popup_w, popup_h});
     shared->menu_window.show();
     shared->menu_window.focus();

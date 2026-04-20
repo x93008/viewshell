@@ -158,6 +158,98 @@ Result<Geometry> X11TrayHost::get_icon_rect() const {
   return Geometry{area.x / scale, area.y / scale, area.width / scale, area.height / scale};
 }
 
+Result<Position> X11TrayHost::get_popup_position(int popup_width, int popup_height) const {
+  if (!icon_) {
+    return tl::unexpected(Error{"Tray icon not initialized"});
+  }
+
+  GdkScreen* screen = nullptr;
+  GdkRectangle area = {};
+  if (!gtk_status_icon_get_geometry(icon_, &screen, &area, nullptr)) {
+    return tl::unexpected(Error{"icon_rect_failed",
+        "gtk_status_icon_get_geometry failed"});
+  }
+
+  // Get scale factor and convert icon rect to logical coordinates
+  int scale = 1;
+  GdkDisplay* display = gdk_display_get_default();
+  GdkMonitor* monitor = nullptr;
+  if (display) {
+    monitor = gdk_display_get_monitor_at_point(display, area.x, area.y);
+    if (monitor) {
+      scale = gdk_monitor_get_scale_factor(monitor);
+    }
+  }
+  if (scale < 1) scale = 1;
+
+  int icon_x = area.x / scale;
+  int icon_y = area.y / scale;
+  int icon_w = area.width / scale;
+  int icon_h = area.height / scale;
+
+  // Get work area in logical coordinates
+  GdkRectangle workarea = {};
+  if (monitor) {
+    gdk_monitor_get_workarea(monitor, &workarea);
+  } else {
+    // Fallback: use icon position as center, no clamping possible
+    return Position{icon_x + icon_w / 2 - popup_width / 2,
+                    icon_y - popup_height};
+  }
+
+  int icon_cx = icon_x + icon_w / 2;
+  int icon_cy = icon_y + icon_h / 2;
+
+  int dist_top = icon_cy - workarea.y;
+  int dist_bottom = (workarea.y + workarea.height) - icon_cy;
+  int dist_left = icon_cx - workarea.x;
+  int dist_right = (workarea.x + workarea.width) - icon_cx;
+
+  int popup_x = 0;
+  int popup_y = 0;
+
+  int min_dist = dist_bottom;
+  int edge = 0; // 0=bottom, 1=top, 2=right, 3=left
+
+  if (dist_top < min_dist) { min_dist = dist_top; edge = 1; }
+  if (dist_right < min_dist) { min_dist = dist_right; edge = 2; }
+  if (dist_left < min_dist) { min_dist = dist_left; edge = 3; }
+
+  switch (edge) {
+    case 0: // taskbar at bottom
+      popup_x = icon_cx - popup_width / 2;
+      popup_y = icon_y - popup_height;
+      break;
+    case 1: // taskbar at top
+      popup_x = icon_cx - popup_width / 2;
+      popup_y = icon_y + icon_h;
+      break;
+    case 2: // taskbar at right
+      popup_x = icon_x - popup_width;
+      popup_y = icon_cy - popup_height / 2;
+      break;
+    case 3: // taskbar at left
+      popup_x = icon_x + icon_w;
+      popup_y = icon_cy - popup_height / 2;
+      break;
+  }
+
+  // Clamp to work area
+  int wa_right = workarea.x + workarea.width;
+  int wa_bottom = workarea.y + workarea.height;
+
+  if (popup_x + popup_width > wa_right)
+    popup_x = wa_right - popup_width;
+  if (popup_x < workarea.x)
+    popup_x = workarea.x;
+  if (popup_y + popup_height > wa_bottom)
+    popup_y = wa_bottom - popup_height;
+  if (popup_y < workarea.y)
+    popup_y = workarea.y;
+
+  return Position{popup_x, popup_y};
+}
+
 Result<void> X11TrayHost::remove() {
   if (icon_) {
     gtk_status_icon_set_visible(icon_, FALSE);
