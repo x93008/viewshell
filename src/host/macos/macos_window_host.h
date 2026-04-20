@@ -82,6 +82,8 @@ private:
   std::vector<std::string> init_scripts_;
   std::vector<PageLoadHandler> page_load_handlers_;
   NavigationHandler navigation_handler_;
+  bool dismiss_on_outside_click_ = false;
+  void* menu_tracking_observer_ = nullptr; // NSNotification observer
 };
 
 } // namespace viewshell

@@ -210,6 +210,11 @@ MacOSWindowHost::MacOSWindowHost(std::shared_ptr<RuntimeAppState> app_state,
       window_state_(std::move(window_state)) {}
 
 MacOSWindowHost::~MacOSWindowHost() {
+  if (menu_tracking_observer_) {
+    id observer = (__bridge_transfer id)menu_tracking_observer_;
+    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+    menu_tracking_observer_ = nullptr;
+  }
   WKWebView* webview = (WKWebView*)webview_;
   if (webview) {
     [webview removeFromSuperview];
@@ -249,6 +254,7 @@ Result<std::shared_ptr<MacOSWindowHost>> MacOSWindowHost::create(
       new MacOSWindowHost(std::move(app_state), std::move(window_state)));
   host->apply_common_options(options);
   host->invoke_bus_ = std::make_unique<InvokeBus>();
+  host->dismiss_on_outside_click_ = options.dismiss_on_outside_click;
 
   NSRect rect = NSMakeRect(options.x.value_or(100), options.y.value_or(100), options.width, options.height);
   NSWindowStyleMask style = host->borderless_ ? NSWindowStyleMaskBorderless : (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable);
@@ -348,8 +354,32 @@ Result<void> MacOSWindowHost::maximize() { if (auto r=ensure_window(); !r) retur
 Result<void> MacOSWindowHost::unmaximize() { if (auto r=ensure_window(); !r) return r; [(NSWindow*)window_ zoom:nil]; return {}; }
 Result<void> MacOSWindowHost::minimize() { if (auto r=ensure_window(); !r) return r; [(NSWindow*)window_ miniaturize:nil]; return {}; }
 Result<void> MacOSWindowHost::unminimize() { if (auto r=ensure_window(); !r) return r; [(NSWindow*)window_ deminiaturize:nil]; return {}; }
-Result<void> MacOSWindowHost::show() { if (auto r=ensure_window(); !r) return r; [(NSWindow*)window_ orderFront:nil]; return {}; }
-Result<void> MacOSWindowHost::hide() { if (auto r=ensure_window(); !r) return r; [(NSWindow*)window_ orderOut:nil]; return {}; }
+Result<void> MacOSWindowHost::show() {
+  if (auto r=ensure_window(); !r) return r;
+  [(NSWindow*)window_ orderFront:nil];
+  if (dismiss_on_outside_click_ && !menu_tracking_observer_) {
+    auto* host = this;
+    id observer = [[NSNotificationCenter defaultCenter]
+        addObserverForName:NSMenuDidBeginTrackingNotification
+        object:nil
+        queue:[NSOperationQueue mainQueue]
+        usingBlock:^(NSNotification* note) {
+      host->dispatch_native_event("host-blur");
+    }];
+    menu_tracking_observer_ = (__bridge_retained void*)observer;
+  }
+  return {};
+}
+Result<void> MacOSWindowHost::hide() {
+  if (auto r=ensure_window(); !r) return r;
+  if (menu_tracking_observer_) {
+    id observer = (__bridge_transfer id)menu_tracking_observer_;
+    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+    menu_tracking_observer_ = nullptr;
+  }
+  [(NSWindow*)window_ orderOut:nil];
+  return {};
+}
 Result<void> MacOSWindowHost::focus() { if (auto r=ensure_window(); !r) return r; [(NSWindow*)window_ makeKeyAndOrderFront:nil]; [NSApp activateIgnoringOtherApps:YES]; return {}; }
 
 Result<void> MacOSWindowHost::set_geometry(Geometry geometry) {
