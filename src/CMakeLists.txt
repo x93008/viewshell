@@ -33,6 +33,7 @@ else()
     runtime/x11_backend_runtime.cpp
     host/x11/x11_window_host.cpp
     host/x11/x11_tray_host.cpp
+    host/x11/x11_outside_click_detector.cpp
     window/x11_window_driver.cpp
     webview/engine_resolver.cpp
     webview/resource_protocol.cpp

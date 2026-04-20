@@ -5,6 +5,7 @@
 #include "bridge/x11_bridge_driver.h"
 #include "host/window_api_bootstrap.h"
 #include "bridge/invoke_bus.h"
+#include "host/x11/x11_outside_click_detector.h"
 #include "webview/x11_webview_driver.h"
 #include "window/x11_window_driver.h"
 #include "viewshell/runtime_state.h"
@@ -31,7 +32,12 @@ X11WindowHost::X11WindowHost(std::shared_ptr<RuntimeAppState> app_state,
     : app_state_(std::move(app_state)),
       window_state_(std::move(window_state)) {}
 
-X11WindowHost::~X11WindowHost() = default;
+X11WindowHost::~X11WindowHost() {
+  if (click_listener_id_) {
+    X11GlobalClickListener::instance().remove_listener(click_listener_id_);
+    click_listener_id_ = 0;
+  }
+}
 
 Result<std::shared_ptr<X11WindowHost>> X11WindowHost::create(
     std::shared_ptr<RuntimeAppState> app_state,
@@ -46,6 +52,7 @@ Result<std::shared_ptr<X11WindowHost>> X11WindowHost::create(
   host->webview_driver_ = std::make_unique<WebviewDriver>();
   host->bridge_driver_ = std::make_unique<BridgeDriver>();
   host->invoke_bus_ = std::make_unique<InvokeBus>();
+  host->dismiss_on_outside_click_ = options.dismiss_on_outside_click;
   host->apply_common_options(options);
 
   host->window_driver_->on_close = [app_state = weak_app_state,
@@ -200,10 +207,32 @@ Result<void> X11WindowHost::unminimize() {
 }
 
 Result<void> X11WindowHost::show() {
-  return window_driver_->show();
+  auto result = window_driver_->show();
+  if (!result) return result;
+
+  if (dismiss_on_outside_click_ && bridge_driver_ && !click_listener_id_) {
+    auto* driver = window_driver_.get();
+    auto* bridge = bridge_driver_.get();
+    click_listener_id_ = X11GlobalClickListener::instance().add_listener(
+      [driver, bridge](const X11GlobalClickListener::ClickEvent& event) {
+        auto pos = driver->get_position();
+        auto size = driver->get_size();
+        if (!pos || !size) return;
+        if (event.x < pos->x || event.x > pos->x + size->width ||
+            event.y < pos->y || event.y > pos->y + size->height) {
+          Json payload{{"kind", "native_event"}, {"name", "host-blur"}, {"payload", Json::object()}};
+          (void)bridge->post_to_page(payload.dump());
+        }
+      });
+  }
+  return {};
 }
 
 Result<void> X11WindowHost::hide() {
+  if (click_listener_id_) {
+    X11GlobalClickListener::instance().remove_listener(click_listener_id_);
+    click_listener_id_ = 0;
+  }
   return window_driver_->hide();
 }
 

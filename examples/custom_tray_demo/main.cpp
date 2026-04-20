@@ -50,6 +50,7 @@ int main(int argc, char* argv[]) {
   menu_opts.always_on_top = true;
   menu_opts.show_in_taskbar = false;
   menu_opts.resizable = false;
+  menu_opts.dismiss_on_outside_click = true;
 
   auto menu_window = app->create_window(menu_opts);
   if (!menu_window) {

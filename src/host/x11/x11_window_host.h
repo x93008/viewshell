@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <viewshell/options.h>
 
@@ -65,6 +66,8 @@ private:
   std::unique_ptr<InvokeBus> invoke_bus_;
   std::unique_ptr<WindowDriver> window_driver_;
   std::unique_ptr<WebviewDriver> webview_driver_;
+  bool dismiss_on_outside_click_ = false;
+  uint64_t click_listener_id_ = 0;
 };
 
 } // namespace viewshell

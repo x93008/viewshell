@@ -25,6 +25,7 @@ struct WindowOptions {
   bool show_in_taskbar = true;
   bool resizable = true;
   bool inject_window_api = false;
+  bool dismiss_on_outside_click = false;  // X11 only: hide window when clicking outside
 };
 
 struct NormalizedAppOptions {
