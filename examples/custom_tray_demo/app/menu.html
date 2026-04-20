@@ -42,6 +42,11 @@
         }
       });
     });
+    window.addEventListener('blur', function() {
+      if (window.__viewshell) {
+        window.__viewshell.invoke('menu.click', { id: '__dismiss' });
+      }
+    });
   </script>
 </body>
 </html>
