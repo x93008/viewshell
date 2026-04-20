@@ -51,6 +51,12 @@ namespace viewshell { class MacOSWindowHost; }
   return NO;
 }
 
+- (void)windowDidResignKey:(NSNotification*)notification {
+  if (self.host) {
+    self.host->dispatch_native_event("host-blur");
+  }
+}
+
 @end
 
 @implementation ViewshellWebMessageHandler
@@ -525,6 +531,11 @@ void MacOSWindowHost::dispatch_json_to_page(const Json& payload) {
   }
   NSString* js = [NSString stringWithFormat:@"window.dispatchEvent(new CustomEvent('viewshell:message', { detail: %@ }));", to_nsstring(payload.dump())];
   [(WKWebView*)webview_ evaluateJavaScript:js completionHandler:nil];
+}
+
+void MacOSWindowHost::dispatch_native_event(const std::string& name) {
+  Json payload{{"kind", "native_event"}, {"name", name}, {"payload", Json::object()}};
+  dispatch_json_to_page(payload);
 }
 
 void MacOSWindowHost::begin_drag() {

@@ -182,6 +182,14 @@ LRESULT CALLBACK Win32WindowHost::WindowProc(HWND hwnd, UINT message, WPARAM wpa
     (void)self->webview_host_->move_focus();
   }
 
+  if (message == WM_ACTIVATE && self->webview_host_) {
+    if (LOWORD(wparam) == WA_INACTIVE) {
+      // Notify JS that window lost activation
+      Json payload{{"kind", "native_event"}, {"name", "host-blur"}, {"payload", Json::object()}};
+      (void)self->webview_host_->post_json_message(payload.dump());
+    }
+  }
+
   if (message == WM_SIZE && self->webview_host_) {
     auto rect = self->client_rect();
     (void)self->webview_host_->set_bounds(rect);

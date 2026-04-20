@@ -78,6 +78,13 @@ Result<std::shared_ptr<X11WindowHost>> X11WindowHost::create(
     return tl::unexpected(bridge_attach.error());
   }
 
+  host->window_driver_->on_focus = [bridge = host->bridge_driver_.get()](bool focused) {
+    if (!focused) {
+      Json payload{{"kind", "native_event"}, {"name", "host-blur"}, {"payload", Json::object()}};
+      (void)bridge->post_to_page(payload.dump());
+    }
+  };
+
   host->bridge_driver_->on_raw_message = [invoke_bus = host->invoke_bus_.get(),
                                              bridge = host->bridge_driver_.get(),
                                              host_ptr = host.get()](std::string_view raw) {
