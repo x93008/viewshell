@@ -1,0 +1,23 @@
+src/host/macos/macos_window_host.mm
+  ea5e75e89ebe0f93 360
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.5",
+  "base_commit_sha": "b37617d303128ecf9d539bc5c5b0d268eca26d1f",
+  "prompts": {
+    "ea5e75e89ebe0f93": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_25662f639ffe8G9CZCqbBCucum",
+        "model": "cchClaude/claude-opus-4-6"
+      },
+      "human_author": "lixingxin",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 28,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
