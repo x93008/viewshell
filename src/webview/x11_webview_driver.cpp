@@ -101,7 +101,8 @@ static gboolean on_decide_policy(WebKitWebView*, WebKitPolicyDecision* decision,
   }
 
   auto* navigation = WEBKIT_NAVIGATION_POLICY_DECISION(decision);
-  auto* request = webkit_navigation_policy_decision_get_request(navigation);
+  auto* action = webkit_navigation_policy_decision_get_navigation_action(navigation);
+  auto* request = action ? webkit_navigation_action_get_request(action) : nullptr;
   const char* uri = request ? webkit_uri_request_get_uri(request) : nullptr;
   NavigationRequest nav_request{uri ? uri : ""};
 
