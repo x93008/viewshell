@@ -1,0 +1,25 @@
+src/host/windows/win32_window_host.h
+  ea5e75e89ebe0f93 77
+src/host/windows/win32_window_host.cpp
+  ea5e75e89ebe0f93 186,191-192,436
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.6",
+  "base_commit_sha": "600d9a8e76636db7eccd79d1f13919e6f36316c4",
+  "prompts": {
+    "ea5e75e89ebe0f93": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_25662f639ffe8G9CZCqbBCucum",
+        "model": "cchClaude/claude-opus-4-6"
+      },
+      "human_author": "lixingxin",
+      "messages": [],
+      "total_additions": 6,
+      "total_deletions": 1,
+      "accepted_lines": 6,
+      "overriden_lines": 0
+    }
+  }
+}
