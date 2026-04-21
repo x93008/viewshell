@@ -42,11 +42,6 @@
         }
       });
     });
-    window.addEventListener('blur', function() {
-      if (window.__viewshell) {
-        window.__viewshell.invoke('menu.click', { id: '__dismiss' });
-      }
-    });
     if (window.__viewshell) {
       window.__viewshell.on('host-blur', function() {
         window.__viewshell.invoke('menu.click', { id: '__dismiss' });

@@ -183,11 +183,12 @@ LRESULT CALLBACK Win32WindowHost::WindowProc(HWND hwnd, UINT message, WPARAM wpa
   }
 
   if (message == WM_ACTIVATE && self->webview_host_) {
-    if (LOWORD(wparam) == WA_INACTIVE) {
+    if (LOWORD(wparam) == WA_INACTIVE && !self->suppress_blur_) {
       // Notify JS that window lost activation
       Json payload{{"kind", "native_event"}, {"name", "host-blur"}, {"payload", Json::object()}};
       (void)self->webview_host_->post_json_message(payload.dump());
     }
+    self->suppress_blur_ = false;
   }
 
   if (message == WM_SIZE && self->webview_host_) {
@@ -430,6 +431,7 @@ Result<void> Win32WindowHost::unminimize() {
 
 Result<void> Win32WindowHost::show() {
   if (auto result = ensure_window(); !result) return result;
+  suppress_blur_ = true;
   ShowWindow(hwnd_, IsIconic(hwnd_) ? SW_RESTORE : SW_SHOW);
   return {};
 }
@@ -442,6 +444,7 @@ Result<void> Win32WindowHost::hide() {
 
 Result<void> Win32WindowHost::focus() {
   if (auto result = ensure_window(); !result) return result;
+  suppress_blur_ = true;
   // Attach to foreground thread to bypass SetForegroundWindow restrictions
   DWORD fg_thread = GetWindowThreadProcessId(GetForegroundWindow(), nullptr);
   DWORD my_thread = GetCurrentThreadId();

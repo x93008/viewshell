@@ -74,6 +74,7 @@ private:
   HWND hwnd_ = nullptr;
   Size size_{};
   Position position_{};
+  bool suppress_blur_ = false;
 };
 
 } // namespace viewshell
